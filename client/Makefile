@@ -1,6 +1,7 @@
 # ===========================================
-# usage : make TARGET=xxx
-# xxx   : dcmotor dht11 servo clcd pm2008 szh
+# Created	: 2022.08.31
+# Last Modified	: 2022.09.05
+# Author	: SangDon Park
 # ===========================================
 
 CC = gcc
@@ -12,7 +13,7 @@ CFLAGS = -Wall -O2 -lwiringPi
 LDFLAGS =
 
 # Header File Path
-INCLUDE = -Iinc
+INCLUDE = -Iinc/
 
 # Source File Path 
 SRC_DIR = ./src
@@ -20,14 +21,30 @@ SRC_DIR = ./src
 # Exec File Path
 OUT_DIR = ./output
 
-TARGET = 
+TARGET = client
 
-all: $(TARGET)
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) -c $(CFLAGS) $(INCLUDE) -o $@ $^
 
-$(TARGET): $(SRC_DIR)/$(TARGET).o
+OBJS = $(SRC_DIR)/client.o $(SRC_DIR)/dcmotor.o $(SRC_DIR)/servo.o
+
+#all: $(OBJS) 
+#	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
+
+#all: objs
+
+#objs: client.o
+#	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
+
+#$(TARGET): $(SRC_DIR)/$(TARGET).o
+#	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
+all: TARGET 
+#	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
+
+TARGET: $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
 
 clean:
-	rm -f $(OUT_DIR)/*
-	rm -fv $(SRC_DIR)/*.o
+	rm -f $(OUT_DIR)/$(TARGET)
+	rm -f $(SRC_DIR)/*.o
 	
