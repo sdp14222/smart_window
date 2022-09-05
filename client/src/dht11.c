@@ -1,9 +1,5 @@
-#include <wiringPi.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#define MAXTIMINGS	85
-#define DHTPIN		24			// as "wiringPiSetup()" pin.no scheme
+#include "dht11.h"
+
 int dht11_dat[5] = { 0, 0, 0, 0, 0 };
  
 void read_dht11_dat()
@@ -64,18 +60,3 @@ void read_dht11_dat()
 	}
 }
  
-int main( void )
-{
-	printf( "Raspberry Pi wiringPi DHT11 Temperature test program\n" );
- 
-	if ( wiringPiSetup() == -1 )
-		exit( 1 );
- 
-	while ( 1 )
-	{
-		read_dht11_dat();
-		delay( 2000 ); 	// need no less than 2 seconds between each sampling without data error
-	}
- 
-	return(0);
-}

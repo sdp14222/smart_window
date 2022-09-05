@@ -26,7 +26,7 @@ TARGET = client
 $(SRC_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) -c $(CFLAGS) $(INCLUDE) -o $@ $^
 
-OBJS = $(SRC_DIR)/client.o $(SRC_DIR)/dcmotor.o $(SRC_DIR)/servo.o
+OBJS = $(SRC_DIR)/client.o $(SRC_DIR)/dcmotor.o $(SRC_DIR)/servo.o $(SRC_DIR)/dht11.o
 
 #all: $(OBJS) 
 #	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
