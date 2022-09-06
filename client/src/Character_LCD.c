@@ -91,16 +91,20 @@ static void CLCD_GPIO_Set(CLCD_PIN_S select_pin)
 #endif
 	{
 		if((select_pin >> i) & 0x001)
+		{
 #if defined STM32F103
 			HAL_GPIO_WritePin(clcd_pin[i].lcd_gpio_type, clcd_pin[i].pin_num, GPIO_PIN_SET);
 #elif defined WIRINGPI
 			digitalWrite(clcd_pin[i].pin_num, 1);
+		}
 #endif
 		else
+		{
 #if defined STM32F103
 			HAL_GPIO_WritePin(clcd_pin[i].lcd_gpio_type, clcd_pin[i].pin_num, GPIO_PIN_RESET);
 #elif defined WIRINGPI
 			digitalWrite(clcd_pin[i].pin_num, 0);
+		}
 #endif
 	}
 }
@@ -174,11 +178,18 @@ static void CLCD_Inst_Exec(void)
 
 void CLCD_Init(void)
 {
+	printf("CLCD_Init() start...\n");
 	CLCD_Config_Init();
+
+	printf("clcd_delay(40)...\n");
 	clcd_delay(40);
 	CLCD_Pin_Set_Exec(CLCD_PIN_S_DB5 | CLCD_PIN_S_DB4);
+
+	printf("clcd_delay(5)...\n");
 	clcd_delay(5);
 	CLCD_Pin_Set_Exec(CLCD_PIN_S_DB5 | CLCD_PIN_S_DB4);
+
+	printf("clcd_delay(1)...\n");
 	clcd_delay(1);
 	CLCD_Pin_Set_Exec(CLCD_PIN_S_DB5 | CLCD_PIN_S_DB4);
 #if CLCD_I_FS_D_L == 0
@@ -192,6 +203,8 @@ void CLCD_Init(void)
 	// Initialization Ends
 
 	CLCD_Display_ON_OFF_Control(CLCD_DOC_E_INIT);
+
+	printf("CLCD_Init() end...\n");
 }
 
 void CLCD_Clear_Display(void)

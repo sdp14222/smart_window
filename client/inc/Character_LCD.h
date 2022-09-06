@@ -20,14 +20,16 @@
 #define WIRINGPI
 
 
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+
 #if defined STM32F103
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_gpio.h"
 
 #elif defined WIRINGPI
 #include <wiringPi.h>
-#include <stdio.h>
-#include <stdint.h>
 
 #endif
 
