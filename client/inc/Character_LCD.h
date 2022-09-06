@@ -2,14 +2,34 @@
  * Character_LCD.h
  *
  *  Created on: Mar 21, 2022
+ *      Author: SangDon Park 
+ *
+ *  Modified  : Sep 05, 2022
  *      Author: SangDon Park
+ *
+ *  Datasheet : HD44780U(LCD-2)
+ *             (Doc Matrix Liquid Crystal Display Controller/Driver)
+ *
+ *  Based on STM32F1xx Hal_Driver, WiringPi
  */
 
 #ifndef INC_CHARACTER_LCD_H_
 #define INC_CHARACTER_LCD_H_
 
+//#define STM32F103
+#define WIRINGPI
+
+
+#if defined STM32F103
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_gpio.h"
+
+#elif defined WIRINGPI
+#include <wiringPi.h>
+#include <stdio.h>
+#include <stdint.h>
+
+#endif
 
 
 /********* OP_INTERFACE *********
@@ -20,6 +40,7 @@
 
 
 /********* CLCD_GPIO_PIN_CONFIG *********/
+#if defined STM32F103
 #define CLCD_PIN_RS_TYPE	GPIOC
 #define CLCD_PIN_RS_NUM		GPIO_PIN_13
 #define CLCD_PIN_RW_TYPE	GPIOC
@@ -45,6 +66,28 @@
 #define CLCD_PIN_D1_NUM		GPIO_PIN_6
 #define CLCD_PIN_D0_TYPE	GPIOB
 #define CLCD_PIN_D0_NUM		GPIO_PIN_5
+
+#endif
+
+
+#elif defined WIRINGPI
+#define CLCD_PIN_RS_NUM		21
+#define CLCD_PIN_RW_NUM		20
+#define CLCD_PIN_E_NUM		16	
+
+#define CLCD_PIN_D7_NUM		7
+#define CLCD_PIN_D6_NUM		5
+#define CLCD_PIN_D5_NUM		6
+#define CLCD_PIN_D4_NUM		26
+
+#if OP_INTERFACE == 1
+#define CLCD_PIN_D3_NUM		1	
+#define CLCD_PIN_D2_NUM		2
+#define CLCD_PIN_D1_NUM		3
+#define CLCD_PIN_D0_NUM		4
+
+
+#endif
 #endif
 
 /********* INSTRUCTIONS_INIT_CONFIG *********/
@@ -100,7 +143,9 @@ typedef union
 
 typedef struct
 {
+#if defined STM32F103
 	GPIO_TypeDef* lcd_gpio_type;
+#endif
 	uint16_t pin_num;
 } CLCD_PIN;
 
