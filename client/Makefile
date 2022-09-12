@@ -7,7 +7,7 @@
 CC = gcc
 
 # Compiler Options
-CFLAGS = -Wall -O2 -lwiringPi
+CFLAGS = -Wall -O2 -lwiringPi -D_REENTRANT -lpthread
 
 # Linker Options
 LDFLAGS =
