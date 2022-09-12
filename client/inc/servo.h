@@ -3,10 +3,9 @@
 
 #include <wiringPi.h>
 #include <stdio.h>
-#include <softPwm.h>
 #include <stdlib.h>
 
-#define SERVO 12
+#define SERVO_PIN 12 // bcm pin num
 
 void servo_init(void);
 void servo(void);
