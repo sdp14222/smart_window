@@ -1,20 +1,18 @@
 #include "dcmotor.h"
 
-#define FOREWARD  13
-
 void dcmotor_init(void)
 {
-	pinMode(FOREWARD, OUTPUT);
-	softPwmCreate(FOREWARD, 0, 200);
+	pinMode(DCMOTOR_PIN, PWM_OUTPUT);
+	pwmSetMode(PWM_MODE_MS); // Mark-Space mode
 }
 
 void dcmotor(void)
 {
-    softPwmWrite(FOREWARD, 100);
-    printf("forward run \n");
-
-    delay(1000);	
-    softPwmWrite(FOREWARD, 0);
-    printf("---------------\n");
-    delay(1000);	
+	/*
+	 * default range : 0 ~ 1023
+   	 */
+	pwmWrite(DCMOTOR_PIN, 500);
+	delay(1000);	
+	pwmWrite(DCMOTOR_PIN, 0);
+	delay(1000);	
 }
