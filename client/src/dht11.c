@@ -1,6 +1,6 @@
 #include "dht11.h"
 
-int dht11_dat[5] = { 0, 0, 0, 0, 0 };
+static int dht11_dat[5] = { 0, 0, 0, 0, 0 };
  
 void read_dht11_dat()
 {
@@ -55,6 +55,10 @@ void read_dht11_dat()
 		f = dht11_dat[2] * 9. / 5. + 32;
 		printf( "Humidity = %d.%d %% Temperature = %d.%d C (%.1f F)\n",
 			dht11_dat[0], dht11_dat[1], dht11_dat[2], dht11_dat[3], f );
+		dht11_sdata[0] = dht11_dat[0];
+		dht11_sdata[1] = dht11_dat[1];
+		dht11_sdata[2] = dht11_dat[2];
+		dht11_sdata[3] = dht11_dat[3];
 	}else  {
 		printf( "Data not good, skip\n" );
 	}
