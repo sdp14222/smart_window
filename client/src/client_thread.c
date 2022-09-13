@@ -1,4 +1,8 @@
 #include "client.h"
+#if 0
+extern int dht11_dat[5];
+int dht11_sdata[4];
+#endif
 
 void * dcmotor_thread(void *arg)
 {
@@ -7,6 +11,7 @@ void * dcmotor_thread(void *arg)
 	{
 		dcmotor();
 	}
+	return NULL;
 }
 
 void * servo_thread(void *arg)
@@ -16,19 +21,31 @@ void * servo_thread(void *arg)
 	{
 		servo();
 	}
+	return NULL;
 }
 
 
 void * dht11_thread(void *arg)
 {
+	int ret_data[5] = {0};
+	char str0[16];
+
 	while(1)
 	{
-		read_dht11_dat();
+		if(read_dht11_dat(ret_data))
+		{
+			pthread_mutex_lock(&mutex);
+			sprintf(str0, "H:%2d.%1d%c T:%2d.%1dC",
+				 ret_data[0], ret_data[1], '%', ret_data[2], ret_data[3]);
+			pthread_mutex_unlock(&mutex);
+			CLCD_Write(CLCD_ADDR_SET, 0, 0, str0);
+		}
 		delay(2000);
 	}
+	return NULL;
 }
 
-void * Character_LCD_thread(void *arg)
+void * Character_LCD_init_thread(void *arg)
 {
 	//char str1[] = "Hello";
 	//CLCD_Init();
@@ -53,11 +70,11 @@ void * Character_LCD_thread(void *arg)
 	printf("CLCD_Clear_Display()\n");
 	CLCD_Clear_Display();
 
+#if 0
 	char str0[16];
 
 	while(1)
 	{
-#if 0
 		printf("delay...\n");
 		delay(1000);
 
@@ -71,11 +88,39 @@ void * Character_LCD_thread(void *arg)
 
 		printf("CLCD_Return_Home()\n");
 		CLCD_Return_Home();
-#endif
-		//pthread_mutex_lock(&mutex);
-		sprintf(str0, "H:%2d.%1d\% T:%2d.%1dC",
-			 dht11_sdata[0], dht11_sdata[1], dht11_sdata[2], dht11_sdata[3]);
-		//pthread_mutex_unlock(&mutex);
+		pthread_mutex_lock(&mutex);
+		sprintf(str0, "H:%2d.%1d%c T:%2d.%1dC",
+			 dht11_sdata[0], dht11_sdata[1], '%',dht11_sdata[2], dht11_sdata[3]);
+		pthread_mutex_unlock(&mutex);
 		CLCD_Write(CLCD_ADDR_SET, 0, 0, str0);
 	}
+#endif
+	return NULL;
 }
+
+#if 0
+void * peek_data_thread(void *arg)
+{
+	/*
+	 * dht11 data check
+	 */
+	while(1)
+	{
+		if(dht11_dat[4] == ((dht11_dat[0] + dht11_dat[1] + dht11_dat[2] + dht11_dat[3]) & 0xFF))
+		{
+			pthread_mutex_lock(&mutex);
+			dht11_sdata[0] = dht11_dat[0];
+			dht11_sdata[1] = dht11_dat[1];
+			dht11_sdata[2] = dht11_dat[2];
+			dht11_sdata[3] = dht11_dat[3];
+			pthread_mutex_unlock(&mutex);
+		}
+		else
+		{
+
+		}
+		delay(10);
+	}
+	return NULL;
+}
+#endif
