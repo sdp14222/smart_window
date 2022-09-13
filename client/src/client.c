@@ -63,7 +63,6 @@ int main(void)
 	pthread_create(&snd_thread, NULL, send_msg, (void*)&sock);
 	pthread_create(&rcv_thread, NULL, recv_msg, (void*)&sock);
 	pthread_create(&Character_LCD_init_thread_val, NULL, Character_LCD_init_thread, (void*)&sock);
-	delay(1000);
 	pthread_create(&dcmotor_thread_val, NULL, dcmotor_thread, (void*)&sock);
 	pthread_create(&servo_thread_val, NULL, servo_thread, (void*)&sock);
 	pthread_create(&dht11_thread_val, NULL, dht11_thread, (void*)&sock);

@@ -29,6 +29,10 @@ void * dht11_thread(void *arg)
 {
 	int ret_data[5] = {0};
 	char str0[16];
+	time_t t;
+	struct tm s_tm;
+
+	delay(2000);
 
 	while(1)
 	{
@@ -41,6 +45,16 @@ void * dht11_thread(void *arg)
 			CLCD_Write(CLCD_ADDR_SET, 0, 0, str0);
 		}
 		delay(2000);
+
+		t = time(NULL);
+		s_tm = *localtime(&t);
+		printf("%d %d %d %d %d %d ",
+				s_tm.tm_year + 1900,
+				s_tm.tm_mon + 1,
+				s_tm.tm_mday,
+				s_tm.tm_hour,
+				s_tm.tm_min,
+				s_tm.tm_sec);
 	}
 	return NULL;
 }
@@ -54,7 +68,7 @@ void * Character_LCD_init_thread(void *arg)
 	CLCD_Write(CLCD_ADDR_SET, 1, 0, "Smart Window");
 
 	printf("delay...\n");
-	delay(3000);
+	delay(1000);
 
 #if 0
 	printf("Hoee\n");

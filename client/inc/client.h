@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <pthread.h>
+#include <time.h>
 #include "dcmotor.h"
 #include "servo.h"
 #include "dht11.h"
