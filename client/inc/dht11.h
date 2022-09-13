@@ -9,8 +9,6 @@
 #define MAXTIMINGS	85 
 #define DHTPIN		19	
 
-int dht11_sdata[4];
-
-void read_dht11_dat();
+int read_dht11_dat(int *ret_data);
 
 #endif
