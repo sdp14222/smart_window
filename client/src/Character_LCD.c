@@ -27,11 +27,32 @@ static void CLCD_Config_Init();
 static void CLCD_Inst_Exec(void);
 static void CLCD_Display_ON_OFF_Control(CLCD_DOC_E select);
 static void CLCD_Function_Set(void);
+
+#if 0
+/*
+ * Not yet
+ */
 static void CLCD_Set_CGRAM_Address(void);
+#endif
+
 static void CLCD_Set_DDRAM_address(uint16_t row, uint16_t col);
+
+#if 0
+/*
+ * Not yet
+ */
 static void CLCD_Read_Busy_Flag_And_Address(void);
+#endif
+
 static void CLCD_Write_Data_To_CG_OR_DDRAM(uint16_t data);
+
+#if 0
+/*
+ * Not yet
+ */
 static void CLCD_Read_Data_From_CG_OR_DDRAM(void);
+#endif
+
 static void pinModeSet(void);
 static void clcd_delay(unsigned int time);
 
@@ -263,10 +284,15 @@ static void CLCD_Function_Set(void)
 	CLCD_Pin_Set_Exec(clcd_pin);
 }
 
+#if 0
+/*
+ * Not yet
+ */
 static void CLCD_Set_CGRAM_Address(void)
 {
 
 }
+#endif
 
 static void CLCD_Set_DDRAM_address(uint16_t row, uint16_t col)
 {
@@ -286,10 +312,15 @@ static void CLCD_Set_DDRAM_address(uint16_t row, uint16_t col)
 	CLCD_Pin_Set_Exec(pin_s);
 }
 
+#if 0
+/*
+ * Not yet
+ */
 static void CLCD_Read_Busy_Flag_And_Address(void)
 {
 
 }
+#endif
 
 static void CLCD_Write_Data_To_CG_OR_DDRAM(uint16_t data)
 {
@@ -298,10 +329,15 @@ static void CLCD_Write_Data_To_CG_OR_DDRAM(uint16_t data)
 	CLCD_Pin_Set_Exec(pin_s);
 }
 
+#if 0
+/*
+ * Not yet
+ */
 static void CLCD_Read_Data_From_CG_OR_DDRAM(void)
 {
 
 }
+#endif
 
 void CLCD_Write(CLCD_ADDR_SET_BOOL addr_set, uint16_t row, uint16_t col, const char* str)
 {
