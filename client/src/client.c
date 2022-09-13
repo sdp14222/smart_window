@@ -1,20 +1,10 @@
-#include <stdio.h>
-#include <wiringPi.h>
-#include <softPwm.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <pthread.h>
-#include "dcmotor.h"
-#include "servo.h"
-#include "dht11.h"
-#include "Character_LCD.h"
+/*
+ * Create date : 2022.08.31
+ * Author : SangDon Park
+ */
+#include "client.h"
 
-#define BUF_SIZE 100
-#define NAME_SIZE 20
-
+#if 0
 void * send_msg(void *arg);
 void * recv_msg(void *arg);
 void * dcmotor_thread(void *arg);
@@ -23,12 +13,15 @@ void * dht11_thread(void *arg);
 void * Character_LCD_thread(void *arg);
 
 void error_handling(char *msg);
+#endif
 
 char server_ip[] = "172.30.1.46";
 char server_port[] = "39202";
 
 char name[NAME_SIZE] = "[DEFAULT]";
 char msg[BUF_SIZE];
+
+pthread_mutex_t mutex;
 
 int main(void)
 {
@@ -55,6 +48,8 @@ int main(void)
     	servo_init();
 	CLCD_Init();
 
+	pthread_mutex_init(&mutex, NULL);
+
 	pthread_create(&snd_thread, NULL, send_msg, (void*)&sock);
 	pthread_create(&rcv_thread, NULL, recv_msg, (void*)&sock);
 	pthread_create(&dcmotor_thread_val, NULL, dcmotor_thread, (void*)&sock);
@@ -68,6 +63,8 @@ int main(void)
 	pthread_join(servo_thread_val, &thread_return);
 	pthread_join(dht11_thread_val, &thread_return);
 	pthread_join(Character_LCD_thread_val, &thread_return);
+
+	pthread_mutex_destroy(&mutex);
 
 	close(sock);
 	return 0;
@@ -114,74 +111,4 @@ void error_handling(char *msg)
 	fputs(msg, stderr);
 	fputc('\n', stderr);
 	exit(1);
-}
-
-void * dcmotor_thread(void *arg)
-{
-	//dcmotor_init();
-	while(1)
-	{
-		dcmotor();
-	}
-}
-
-void * servo_thread(void *arg)
-{
-	//servo_init();
-	while(1)
-	{
-		servo();
-	}
-}
-
-
-void * dht11_thread(void *arg)
-{
-	while(1)
-	{
-		read_dht11_dat();
-		delay(2000);
-	}
-}
-
-void * Character_LCD_thread(void *arg)
-{
-	char str[] = "Hello World!!";
-	//CLCD_Init();
-
-	CLCD_Write(CLCD_ADDR_SET, 0, 0, str);
-	CLCD_Write(CLCD_ADDR_SET, 1, 0, str);
-
-	printf("delay...\n");
-	delay(3000);
-
-	printf("Hoee\n");
-	CLCD_Write(CLCD_ADDR_SET, 0, 0, "Hoee..");
-
-	printf("delay...\n");
-	delay(3000);
-
-	unsigned int cnt = 0;
-	char str1[16];
-
-	printf("CLCD_Clear_Display()\n");
-	CLCD_Clear_Display();
-
-	while(1)
-	{
-		printf("delay...\n");
-		delay(1000);
-
-		printf("cnt = %d\n", cnt);
-		sprintf(str1, "cnt = %d", cnt);
-		CLCD_Write(CLCD_ADDR_SET, 1, 0, str1);
-		cnt++;
-
-		printf("delay...\n");
-		delay(1000);
-
-		printf("CLCD_Return_Home()\n");
-		CLCD_Return_Home();
-	}
-
 }
