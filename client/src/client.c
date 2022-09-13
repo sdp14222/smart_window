@@ -4,17 +4,6 @@
  */
 #include "client.h"
 
-#if 0
-void * send_msg(void *arg);
-void * recv_msg(void *arg);
-void * dcmotor_thread(void *arg);
-void * servo_thread(void *arg);
-void * dht11_thread(void *arg);
-void * Character_LCD_thread(void *arg);
-
-void error_handling(char *msg);
-#endif
-
 char server_ip[] = "172.30.1.46";
 char server_port[] = "39202";
 
@@ -22,6 +11,7 @@ char name[NAME_SIZE] = "[DEFAULT]";
 char msg[BUF_SIZE];
 
 pthread_mutex_t mutex;
+struct smart_window_send_data	s_data;
 
 int main(void)
 {
@@ -35,6 +25,7 @@ int main(void)
 #endif
 
 	void * thread_return;
+
 
 	sock = socket(PF_INET, SOCK_STREAM, 0);
 
@@ -51,14 +42,10 @@ int main(void)
 	dcmotor_init();
     	servo_init();
 	CLCD_Init();
-#if 0
-	CLCD_Write(CLCD_ADDR_SET, 0, 0, "Hello");
-	CLCD_Write(CLCD_ADDR_SET, 0, 1, "Smart Window");
-	delay(1000);
-#endif
-	
 
 	pthread_mutex_init(&mutex, NULL);
+
+	s_data.uid = 1;
 
 	pthread_create(&snd_thread, NULL, send_msg, (void*)&sock);
 	pthread_create(&rcv_thread, NULL, recv_msg, (void*)&sock);
