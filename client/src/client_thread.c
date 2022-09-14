@@ -20,17 +20,9 @@ static int fm_dat_proc(void *arg);
 static int ht_dat_proc(void *arg)
 {
 	unsigned int *ht_cnt = &s_data.htv.ht_cnt;
-
-	struct ht_data *htdp= &s_data.htv.ht_dat[*ht_cnt];
-
+	struct ht_data *htdp = &s_data.htv.ht_dat[*ht_cnt];
 	struct tm* s_tm;
 
-#if 0
-	s_data.htv.ht_dat[ht_cnt].h_int = arg[0];
-	s_data.htv.ht_dat[ht_cnt].h_flt = arg[1];
-	s_data.htv.ht_dat[ht_cnt].t_int = arg[2];
-	s_data.htv.ht_dat[ht_cnt].t_flt = arg[3];
-#endif
 	htdp->h_int = ((int *)arg)[0];
 	htdp->h_flt = ((int *)arg)[1];
 	htdp->t_int = ((int *)arg)[2];
@@ -45,17 +37,6 @@ static int ht_dat_proc(void *arg)
 	htdp->t.sec  = s_tm->tm_sec;
 
 	(*ht_cnt)++;
-
-#if 0
-	s_data.htv.ht_dat[ht_cnt].t.year = s_tm->tm_year + 1900;
-	s_data.htv.ht_dat[ht_cnt].t.mon  = s_tm->tm_mon + 1;
-	s_data.htv.ht_dat[ht_cnt].t.day  = s_tm->tm_mday;
-	s_data.htv.ht_dat[ht_cnt].t.hour = s_tm->tm_hour;
-	s_data.htv.ht_dat[ht_cnt].t.min  = s_tm->tm_min;
-	s_data.htv.ht_dat[ht_cnt].t.sec  = s_tm->tm_sec;
-
-	s_data.htv.ht_cnt++;
-#endif
 
 	return 1;
 }
@@ -72,12 +53,46 @@ static int rw_dat_proc(void *arg)
 
 static int dr_dat_proc(void *arg)
 {
-	return 0;
+	unsigned int *dr_cnt = &s_data.drv.dr_cnt;
+	struct dr_data *drdp = &s_data.drv.dr_dat[*dr_cnt];
+	struct tm* s_tm;
+
+	drdp->open = *(int *)arg;
+
+	s_tm = current_time();
+
+	drdp->t.year = s_tm->tm_year;
+	drdp->t.mon  = s_tm->tm_mon;
+	drdp->t.day  = s_tm->tm_mday;
+	drdp->t.hour = s_tm->tm_hour;
+	drdp->t.min  = s_tm->tm_min;
+	drdp->t.sec  = s_tm->tm_sec;
+
+	(*dr_cnt)++;
+
+	return 1;
 }
 
 static int fm_dat_proc(void *arg)
 {
-	return 0;
+	unsigned int *fm_cnt = &s_data.fmv.fm_cnt;
+	struct fm_data *fmdp = &s_data.fmv.fm_dat[*fm_cnt];
+	struct tm* s_tm;
+
+	fmdp->speed = *(int *)arg;
+
+	s_tm = current_time();
+
+	fmdp->t.year = s_tm->tm_year;
+	fmdp->t.mon  = s_tm->tm_mon;
+	fmdp->t.day  = s_tm->tm_mday;
+	fmdp->t.hour = s_tm->tm_hour;
+	fmdp->t.min  = s_tm->tm_min;
+	fmdp->t.sec  = s_tm->tm_sec;
+
+	(*fm_cnt)++;
+
+	return 1;
 }
 
 static int data_store(did_t did, void *arg)
@@ -111,15 +126,14 @@ static int data_store(did_t did, void *arg)
 void * fm_thread(void *arg)
 {
 	int fan_speed;
-
-	int fm_cnt = s_data.fmv.fm_cnt = 0;
+	int cnt = 0;
 	s_data.fmv.did = DID_FM;
 
 	fm_init_run();
 
 	while(1)
 	{
-		if(fm_cnt == 5)
+		if(cnt == 5)
 		{
 			fan_speed = fm(0);
 		}
@@ -127,21 +141,10 @@ void * fm_thread(void *arg)
 		{
 			fan_speed = fm(-1);
 		}
-#if 0
-		s_data.fmv.fm_dat[fm_cnt].speed  = fan_speed;
 
-		s_tm = current_time();
-		s_data.fmv.fm_dat[fm_cnt].t.year = s_tm->tm_year + 1900;
-		s_data.fmv.fm_dat[fm_cnt].t.mon  = s_tm->tm_mon  + 1;
-		s_data.fmv.fm_dat[fm_cnt].t.day  = s_tm->tm_mday;
-		s_data.fmv.fm_dat[fm_cnt].t.hour = s_tm->tm_hour;
-		s_data.fmv.fm_dat[fm_cnt].t.min  = s_tm->tm_min;
-		s_data.fmv.fm_dat[fm_cnt].t.sec  = s_tm->tm_sec;
-
-		fm_cnt = ++s_data.fmv.fm_cnt;
-#endif
 		data_store(DID_FM, (void *)&fan_speed);
 
+		cnt++;
 		delay(1000);
 	}
 	return NULL;
@@ -149,16 +152,15 @@ void * fm_thread(void *arg)
 
 void * dr_thread(void *arg)
 {
-	int dr_cnt = s_data.drv.dr_cnt = 0;
 	int isOpened;
-
+	int cnt = 0;
 	s_data.drv.did = DID_DR;
 
 	dr_init_run();
 
 	while(1)
 	{
-		if(dr_cnt == 5)
+		if(cnt == 5)
 		{
 			isOpened = dr(DR_OPEN);
 		}
@@ -167,21 +169,9 @@ void * dr_thread(void *arg)
 			isOpened = dr(-1);
 		}
 
-#if 0
-		s_data.drv.dr_dat[dr_cnt].open = isOpened;
-
-		s_tm = current_time();
-		s_data.drv.dr_dat[dr_cnt].t.year = s_tm->tm_year + 1900;
-		s_data.drv.dr_dat[dr_cnt].t.mon  = s_tm->tm_mon + 1;
-		s_data.drv.dr_dat[dr_cnt].t.day  = s_tm->tm_mday;
-		s_data.drv.dr_dat[dr_cnt].t.hour = s_tm->tm_hour;
-		s_data.drv.dr_dat[dr_cnt].t.min  = s_tm->tm_min;
-		s_data.drv.dr_dat[dr_cnt].t.sec  = s_tm->tm_sec;
-
-		dr_cnt = ++s_data.drv.dr_cnt;
-#endif
 		data_store(DID_DR, (void *)&isOpened);
 
+		cnt++;
 		delay(1000);
 	}
 	return NULL;
@@ -208,21 +198,6 @@ void * dht11_thread(void *arg)
 
 			CLCD_Write(CLCD_ADDR_SET, 0, 0, str0);
 
-#if 0
-			s_tm = current_time();
-			s_data.htv.ht_dat[ht_cnt].h_int = ret_data[0];
-			s_data.htv.ht_dat[ht_cnt].h_flt = ret_data[1];
-			s_data.htv.ht_dat[ht_cnt].t_int = ret_data[2];
-			s_data.htv.ht_dat[ht_cnt].t_flt = ret_data[3];
-			s_data.htv.ht_dat[ht_cnt].t.year = s_tm->tm_year + 1900;
-			s_data.htv.ht_dat[ht_cnt].t.mon  = s_tm->tm_mon + 1;
-			s_data.htv.ht_dat[ht_cnt].t.day  = s_tm->tm_mday;
-			s_data.htv.ht_dat[ht_cnt].t.hour = s_tm->tm_hour;
-			s_data.htv.ht_dat[ht_cnt].t.min  = s_tm->tm_min;
-			s_data.htv.ht_dat[ht_cnt].t.sec  = s_tm->tm_sec;
-
-			ht_cnt = ++s_data.htv.ht_cnt;
-#endif
 			data_store(DID_HT, (void *)ret_data);
 		}
 		delay(2000);
@@ -232,25 +207,11 @@ void * dht11_thread(void *arg)
 
 void * Character_LCD_init_thread(void *arg)
 {
-	//char str1[] = "Hello";
-	//CLCD_Init();
-
 	CLCD_Write(CLCD_ADDR_SET, 0, 0, "Hello");
 	CLCD_Write(CLCD_ADDR_SET, 1, 0, "Smart Window");
 
 	printf("delay...\n");
 	delay(1000);
-
-#if 0
-	printf("Hoee\n");
-	CLCD_Write(CLCD_ADDR_SET, 0, 0, "Hoee..");
-
-	printf("delay...\n");
-	delay(3000);
-
-	unsigned int cnt = 0;
-	char str1[16];
-#endif
 
 	printf("CLCD_Clear_Display()\n");
 	CLCD_Clear_Display();
