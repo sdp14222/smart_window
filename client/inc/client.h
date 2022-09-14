@@ -142,7 +142,7 @@ struct dr
  ********************************/
 struct fm_data
 {
-	unsigned int	data; // Not yet
+	unsigned int	speed; // current speed 
 	struct td 	t;
 };
 
