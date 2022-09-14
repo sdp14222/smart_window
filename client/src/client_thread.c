@@ -5,23 +5,70 @@ static struct tm* current_time(void);
 
 void * dcmotor_thread(void *arg)
 {
-	//dcmotor_init();
+	struct tm* s_tm;
+	int ret;
+	int cnt = 0;
+
+	dcmotor_init_run();
+
 	while(1)
 	{
-		dcmotor();
+		if(cnt <= 5)
+		{
+			ret = dcmotor(-1);
+			printf("dc ret : %d\n", ret);
+		}
+		else if(cnt > 5 && cnt <= 10)
+		{
+			ret = dcmotor(200);
+			printf("dc ret : %d\n", ret);
+		}
+		else if(cnt > 10 && cnt <= 15)
+		{
+			ret = dcmotor(800);
+			printf("dc ret : %d\n", ret);
+		}
+		else
+		{
+			ret = dcmotor(0);
+			printf("dc ret : %d\n", ret);
+		}
+		cnt++;
+
+		s_tm = current_time();
+		printf("dc year : %d\n", s_tm->tm_year + 1900);
+		printf("dc mon  : %d\n", s_tm->tm_mon + 1);
+		printf("dc mday : %d\n", s_tm->tm_mday);
+		printf("dc hour : %d\n", s_tm->tm_hour);
+		printf("dc min  : %d\n", s_tm->tm_min);
+		printf("dc sec  : %d\n\n", s_tm->tm_sec);
+
+		delay(1000);
 	}
 	return NULL;
 }
 
 void * servo_thread(void *arg)
 {
+	struct tm* s_tm;
 	//servo_init();
 	while(1)
 	{
 		servo();
+
+		s_tm = current_time();
+		printf("servo year : %d\n", s_tm->tm_year + 1900);
+		printf("servo mon  : %d\n", s_tm->tm_mon + 1);
+		printf("servo mday : %d\n", s_tm->tm_mday);
+		printf("servo hour : %d\n", s_tm->tm_hour);
+		printf("servo min  : %d\n", s_tm->tm_min);
+		printf("servo sec  : %d\n\n", s_tm->tm_sec);
+
+		delay(1000);
 	}
 	return NULL;
 }
+
 
 void * dht11_thread(void *arg)
 {
@@ -47,23 +94,24 @@ void * dht11_thread(void *arg)
 			CLCD_Write(CLCD_ADDR_SET, 0, 0, str0);
 
 			s_tm = current_time();
+#if 0
 			printf("year : %d\n", s_tm->tm_year + 1900);
 			printf("mon  : %d\n", s_tm->tm_mon + 1);
 			printf("mday : %d\n", s_tm->tm_mday);
 			printf("hour : %d\n", s_tm->tm_hour);
 			printf("min  : %d\n", s_tm->tm_min);
 			printf("sec  : %d\n\n", s_tm->tm_sec);
-#if 0
+#endif
 			s_data.htv.ht_dat[ht_cnt].h_int = ret_data[0];
 			s_data.htv.ht_dat[ht_cnt].h_flt = ret_data[1];
 			s_data.htv.ht_dat[ht_cnt].t_int = ret_data[2];
 			s_data.htv.ht_dat[ht_cnt].t_flt = ret_data[3];
-			s_data.htv.ht_dat[ht_cnt].t.year = s_tm.tm_year + 1900;
-			s_data.htv.ht_dat[ht_cnt].t.mon = s_tm.tm_mon + 1;
-			s_data.htv.ht_dat[ht_cnt].t.day = s_tm.tm_mday;
-			s_data.htv.ht_dat[ht_cnt].t.hour = s_tm.tm_hour;
-			s_data.htv.ht_dat[ht_cnt].t.min = s_tm.tm_min;
-			s_data.htv.ht_dat[ht_cnt].t.sec = s_tm.tm_sec;
+			s_data.htv.ht_dat[ht_cnt].t.year = s_tm->tm_year + 1900;
+			s_data.htv.ht_dat[ht_cnt].t.mon = s_tm->tm_mon + 1;
+			s_data.htv.ht_dat[ht_cnt].t.day = s_tm->tm_mday;
+			s_data.htv.ht_dat[ht_cnt].t.hour = s_tm->tm_hour;
+			s_data.htv.ht_dat[ht_cnt].t.min = s_tm->tm_min;
+			s_data.htv.ht_dat[ht_cnt].t.sec = s_tm->tm_sec;
 
 			printf("cnt    : %d\n", s_data.htv.ht_cnt);
 			printf("t int  : %d\n", s_data.htv.ht_dat[ht_cnt].t_int);
@@ -72,7 +120,6 @@ void * dht11_thread(void *arg)
 			printf("t sec  : %d\n", s_data.htv.ht_dat[ht_cnt].t.sec);
 
 			ht_cnt = s_data.htv.ht_cnt++;
-#endif
 		}
 		delay(2000);
 	}
