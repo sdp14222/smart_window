@@ -15,10 +15,21 @@ void servo_init(void)
 	pwmSetRange(1000);
 }
 
-void servo(void)
+int servo(int open)
 {
-	pwmWrite(SERVO_PIN, 25);
-	delay(1000);	
-	pwmWrite(SERVO_PIN, 125);
-	delay(1000);	
+	static int isOpened = DR_DEFAULT;
+
+	switch(open)
+	{
+		case -1 :
+			return isOpened;
+		case DR_CLOSE :
+			isOpened = DR_CLOSE;
+		case DR_OPEN  :
+			isOpened = DR_OPEN;
+			pwmWrite(SERVO_PIN, isOpened);
+			return isOpened;
+		default :
+			return -1; // error
+	}
 }

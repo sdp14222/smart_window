@@ -123,7 +123,7 @@ struct rw
  ********************************/
 struct dr_data
 {
-	unsigned int	data; // Not yet
+	unsigned int	open;		// door open 
 	struct td 	t;
 };
 
@@ -142,7 +142,7 @@ struct dr
  ********************************/
 struct fm_data
 {
-	unsigned int	speed; // current speed 
+	unsigned int	speed; 		// current speed 
 	struct td 	t;
 };
 

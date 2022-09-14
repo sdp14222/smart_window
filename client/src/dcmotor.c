@@ -6,13 +6,6 @@ void dcmotor_init(void)
 	pwmSetMode(PWM_MODE_MS); // Mark-Space mode
 }
 
-#if 0
-inline void dcmotor_init_run(void)
-{
-	pwmWrite(DCMOTOR_PIN, DEFAULT_RANGE);
-}
-#endif
-
 int dcmotor(int range)
 {
 	/*************************************************
