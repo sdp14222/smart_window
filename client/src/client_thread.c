@@ -1,28 +1,133 @@
+/**********************************************************
+ * Created : 2022.09.13 
+ * Author  : SangDon Park
+ * 
+ * Desc    : Client.c threads & functions
+ **********************************************************/
 #include "client.h"
 
 extern struct smart_window_send_data	s_data;
-static struct tm* current_time(void);
 
-void * dcmotor_thread(void *arg)
+static struct tm* current_time(void);
+static int data_store(did_t did, void *arg);
+static int ht_dat_proc(void *arg);
+static int dd_dat_proc(void *arg);
+static int rw_dat_proc(void *arg);
+static int dr_dat_proc(void *arg);
+static int fm_dat_proc(void *arg);
+
+
+static int ht_dat_proc(void *arg)
 {
+	unsigned int *ht_cnt = &s_data.htv.ht_cnt;
+
+	struct ht_data *htdp= &s_data.htv.ht_dat[*ht_cnt];
+
 	struct tm* s_tm;
+
+#if 0
+	s_data.htv.ht_dat[ht_cnt].h_int = arg[0];
+	s_data.htv.ht_dat[ht_cnt].h_flt = arg[1];
+	s_data.htv.ht_dat[ht_cnt].t_int = arg[2];
+	s_data.htv.ht_dat[ht_cnt].t_flt = arg[3];
+#endif
+	htdp->h_int = ((int *)arg)[0];
+	htdp->h_flt = ((int *)arg)[1];
+	htdp->t_int = ((int *)arg)[2];
+	htdp->t_flt = ((int *)arg)[3];
+
+	s_tm = current_time();
+	htdp->t.year = s_tm->tm_year;
+	htdp->t.mon  = s_tm->tm_mon;
+	htdp->t.day  = s_tm->tm_mday;
+	htdp->t.hour = s_tm->tm_hour;
+	htdp->t.min  = s_tm->tm_min;
+	htdp->t.sec  = s_tm->tm_sec;
+
+	(*ht_cnt)++;
+
+#if 0
+	s_data.htv.ht_dat[ht_cnt].t.year = s_tm->tm_year + 1900;
+	s_data.htv.ht_dat[ht_cnt].t.mon  = s_tm->tm_mon + 1;
+	s_data.htv.ht_dat[ht_cnt].t.day  = s_tm->tm_mday;
+	s_data.htv.ht_dat[ht_cnt].t.hour = s_tm->tm_hour;
+	s_data.htv.ht_dat[ht_cnt].t.min  = s_tm->tm_min;
+	s_data.htv.ht_dat[ht_cnt].t.sec  = s_tm->tm_sec;
+
+	s_data.htv.ht_cnt++;
+#endif
+
+	return 1;
+}
+
+static int dd_dat_proc(void *arg)
+{
+	return 0;
+}
+
+static int rw_dat_proc(void *arg)
+{
+	return 0;
+}
+
+static int dr_dat_proc(void *arg)
+{
+	return 0;
+}
+
+static int fm_dat_proc(void *arg)
+{
+	return 0;
+}
+
+static int data_store(did_t did, void *arg)
+{
+	int (*dat_proc)(void *arg);
+
+	switch(did)
+	{
+		case DID_HT :
+			dat_proc = ht_dat_proc;
+			break;
+		case DID_DD :
+			dat_proc = dd_dat_proc;
+			break;
+		case DID_RW :
+			dat_proc = rw_dat_proc;
+			break;
+		case DID_DR :
+			dat_proc = dr_dat_proc;
+			break;
+		case DID_FM :
+			dat_proc = fm_dat_proc;
+			break;
+		default :
+			return 0;
+	}
+
+	return dat_proc(arg);
+}
+
+void * fm_thread(void *arg)
+{
 	int fan_speed;
 
 	int fm_cnt = s_data.fmv.fm_cnt = 0;
 	s_data.fmv.did = DID_FM;
 
-	dcmotor_init_run();
+	fm_init_run();
 
 	while(1)
 	{
 		if(fm_cnt == 5)
 		{
-			fan_speed = dcmotor(0);
+			fan_speed = fm(0);
 		}
 		else
 		{
-			fan_speed = dcmotor(-1);
+			fan_speed = fm(-1);
 		}
+#if 0
 		s_data.fmv.fm_dat[fm_cnt].speed  = fan_speed;
 
 		s_tm = current_time();
@@ -34,32 +139,35 @@ void * dcmotor_thread(void *arg)
 		s_data.fmv.fm_dat[fm_cnt].t.sec  = s_tm->tm_sec;
 
 		fm_cnt = ++s_data.fmv.fm_cnt;
+#endif
+		data_store(DID_FM, (void *)&fan_speed);
 
 		delay(1000);
 	}
 	return NULL;
 }
 
-void * servo_thread(void *arg)
+void * dr_thread(void *arg)
 {
-	struct tm* s_tm;
 	int dr_cnt = s_data.drv.dr_cnt = 0;
 	int isOpened;
 
 	s_data.drv.did = DID_DR;
 
-	servo_init_run();
+	dr_init_run();
 
 	while(1)
 	{
 		if(dr_cnt == 5)
 		{
-			isOpened = servo(DR_OPEN);
+			isOpened = dr(DR_OPEN);
 		}
 		else
 		{
-			isOpened = servo(-1);
+			isOpened = dr(-1);
 		}
+
+#if 0
 		s_data.drv.dr_dat[dr_cnt].open = isOpened;
 
 		s_tm = current_time();
@@ -71,6 +179,8 @@ void * servo_thread(void *arg)
 		s_data.drv.dr_dat[dr_cnt].t.sec  = s_tm->tm_sec;
 
 		dr_cnt = ++s_data.drv.dr_cnt;
+#endif
+		data_store(DID_DR, (void *)&isOpened);
 
 		delay(1000);
 	}
@@ -82,9 +192,7 @@ void * dht11_thread(void *arg)
 {
 	int ret_data[5] = {0};
 	char str0[16];
-	struct tm* s_tm;
 
-	int ht_cnt = s_data.htv.ht_cnt = 0;
 	s_data.htv.did = DID_HT;
 
 	delay(2000);
@@ -100,6 +208,7 @@ void * dht11_thread(void *arg)
 
 			CLCD_Write(CLCD_ADDR_SET, 0, 0, str0);
 
+#if 0
 			s_tm = current_time();
 			s_data.htv.ht_dat[ht_cnt].h_int = ret_data[0];
 			s_data.htv.ht_dat[ht_cnt].h_flt = ret_data[1];
@@ -113,6 +222,8 @@ void * dht11_thread(void *arg)
 			s_data.htv.ht_dat[ht_cnt].t.sec  = s_tm->tm_sec;
 
 			ht_cnt = ++s_data.htv.ht_cnt;
+#endif
+			data_store(DID_HT, (void *)ret_data);
 		}
 		delay(2000);
 	}
@@ -219,8 +330,11 @@ static struct tm* current_time(void)
 	time_t t;
 	static struct tm s_tm;
 
-	t = time(NULL);
+	t    = time(NULL);
 	s_tm = *localtime(&t);
+
+	s_tm.tm_year += 1900;
+	s_tm.tm_mon  += 1;
 
 	return &s_tm;
 }
