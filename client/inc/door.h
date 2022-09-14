@@ -1,11 +1,11 @@
-#ifndef __SERVO_H__
-#define __SERVO_H__
+#ifndef __DOOR_H__
+#define __DOOR_H__
 
 #include <wiringPi.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SERVO_PIN 12 // bcm pin num
+#define DR_PIN 12 // bcm pin num
 /*************************************************************
  * PWM = 19.2MHz(Raspberry pi default) / (divisor * range)
  *
@@ -18,13 +18,13 @@
 
 #define DR_DEFAULT	DR_CLOSE 
 
-void servo_init(void);
+void dr_init(void);
 
-inline void servo_init_run(void)
+inline void dr_init_run(void)
 {
-	pwmWrite(SERVO_PIN, DR_DEFAULT);
+	pwmWrite(DR_PIN, DR_DEFAULT);
 }
 
-int servo(int open);
+int dr(int open);
 
 #endif

@@ -10,8 +10,8 @@
 #include <sys/socket.h>
 #include <pthread.h>
 #include <time.h>
-#include "dcmotor.h"
-#include "servo.h"
+#include "fanmotor.h"
+#include "door.h"
 #include "dht11.h"
 #include "Character_LCD.h"
 
@@ -20,19 +20,13 @@
 
 void * send_msg(void *arg);
 void * recv_msg(void *arg);
-void * dcmotor_thread(void *arg);
-void * servo_thread(void *arg);
+void * fm_thread(void *arg);
+void * dr_thread(void *arg);
 void * dht11_thread(void *arg);
 void * Character_LCD_init_thread(void *arg);
-#if 0
-void * peek_data_thread(void *arg);
-#endif
 
 void error_handling(char *msg);
 
-#if 0
-extern int dht11_sdata[4];
-#endif
 extern pthread_mutex_t mutex;
 
 #define DATA_MAX_CNT 80
@@ -83,7 +77,7 @@ struct ht
 /********************************
  * dust data
  ********************************/
-struct d_data
+struct dd_data
 {
 	unsigned int	data; // Not yet
 	struct td 	t;
@@ -96,7 +90,7 @@ struct dd
 {
 	did_t		did;		// data id
 	unsigned int 	dd_cnt;
-	struct d_data 	d_dat[DATA_MAX_CNT];
+	struct dd_data 	dd_dat[DATA_MAX_CNT];
 };
 
 /********************************
@@ -163,10 +157,8 @@ struct smart_window_send_data
 {
 	uint32_t 	uid;
 	struct ht 	htv;
-#if 0
-	struct dd 	dv;
+	struct dd 	ddv;
 	struct rw 	rwv;
-#endif
 	struct dr 	drv;
 	struct fm 	fmv;
 };

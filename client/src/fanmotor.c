@@ -1,12 +1,12 @@
-#include "dcmotor.h"
+#include "fanmotor.h"
 
-void dcmotor_init(void)
+void fm_init(void)
 {
-	pinMode(DCMOTOR_PIN, PWM_OUTPUT);
+	pinMode(FM_PIN, PWM_OUTPUT);
 	pwmSetMode(PWM_MODE_MS); // Mark-Space mode
 }
 
-int dcmotor(int range)
+int fm(int range)
 {
 	/*************************************************
  	 * default range : 0 ~ 1023
@@ -25,7 +25,7 @@ int dcmotor(int range)
 			return cur_range;
 		default :
 			cur_range = range;
-			pwmWrite(DCMOTOR_PIN, cur_range);
+			pwmWrite(FM_PIN, cur_range);
 			return cur_range;
 	}
 }

@@ -27,8 +27,8 @@ $(SRC_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) -c $(CFLAGS) $(INCLUDE) -o $@ $^
 
 OBJS += $(SRC_DIR)/client.o 
-OBJS += $(SRC_DIR)/dcmotor.o 
-OBJS += $(SRC_DIR)/servo.o 
+OBJS += $(SRC_DIR)/fanmotor.o 
+OBJS += $(SRC_DIR)/door.o 
 OBJS += $(SRC_DIR)/dht11.o 
 OBJS += $(SRC_DIR)/Character_LCD.o
 OBJS += $(SRC_DIR)/client_thread.o

@@ -1,8 +1,8 @@
-#include "servo.h"
+#include "door.h"
 
-void servo_init(void)
+void dr_init(void)
 {
-	pinMode(SERVO_PIN, PWM_OUTPUT);
+	pinMode(DR_PIN, PWM_OUTPUT);
 	pwmSetMode(PWM_MODE_MS); // Mark-Space mode
 
 	/*
@@ -15,7 +15,7 @@ void servo_init(void)
 	pwmSetRange(1000);
 }
 
-int servo(int open)
+int dr(int open)
 {
 	static int isOpened = DR_DEFAULT;
 
@@ -27,7 +27,7 @@ int servo(int open)
 			isOpened = DR_CLOSE;
 		case DR_OPEN  :
 			isOpened = DR_OPEN;
-			pwmWrite(SERVO_PIN, isOpened);
+			pwmWrite(DR_PIN, isOpened);
 			return isOpened;
 		default :
 			return -1; // error

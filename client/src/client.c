@@ -18,11 +18,8 @@ int main(void)
 	int sock;
 	struct sockaddr_in serv_addr;
 	pthread_t snd_thread, rcv_thread, 
-		  dcmotor_thread_val, servo_thread_val, dht11_thread_val,
+		  fm_thread_val, dr_thread_val, dht11_thread_val,
 		  Character_LCD_init_thread_val;
-#if 0
-		peek_data_thread_val;
-#endif
 
 	void * thread_return;
 
@@ -39,8 +36,8 @@ int main(void)
 
 	wiringPiSetupGpio(); // bcm pin num
 
-	dcmotor_init();
-    	servo_init();
+	fm_init();
+    	dr_init();
 	CLCD_Init();
 
 	pthread_mutex_init(&mutex, NULL);
@@ -50,22 +47,16 @@ int main(void)
 	pthread_create(&snd_thread, NULL, send_msg, (void*)&sock);
 	pthread_create(&rcv_thread, NULL, recv_msg, (void*)&sock);
 	pthread_create(&Character_LCD_init_thread_val, NULL, Character_LCD_init_thread, (void*)&sock);
-	pthread_create(&dcmotor_thread_val, NULL, dcmotor_thread, (void*)&sock);
-	pthread_create(&servo_thread_val, NULL, servo_thread, (void*)&sock);
+	pthread_create(&fm_thread_val, NULL, fm_thread, (void*)&sock);
+	pthread_create(&dr_thread_val, NULL, dr_thread, (void*)&sock);
 	pthread_create(&dht11_thread_val, NULL, dht11_thread, (void*)&sock);
-#if 0
-	pthread_create(&peek_data_thread_val, NULL, peek_data_thread, (void*)&sock);
-#endif
 
 	pthread_join(snd_thread, &thread_return);
 	pthread_join(rcv_thread, &thread_return);
 	pthread_join(Character_LCD_init_thread_val, &thread_return);
-	pthread_join(dcmotor_thread_val, &thread_return);
-	pthread_join(servo_thread_val, &thread_return);
+	pthread_join(fm_thread_val, &thread_return);
+	pthread_join(dr_thread_val, &thread_return);
 	pthread_join(dht11_thread_val, &thread_return);
-#if 0
-	pthread_join(peek_data_thread_val, &thread_return);
-#endif
 
 	pthread_mutex_destroy(&mutex);
 

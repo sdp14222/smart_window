@@ -1,11 +1,11 @@
-#ifndef __DCMOTOR_H__
-#define __DCMOTOR_H__
+#ifndef __FANMOTOR_H__
+#define __FANMOTOR_H__
 
 #include <wiringPi.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DCMOTOR_PIN 	13	// BCM pin num
+#define FM_PIN 	13	// BCM pin num
 
 /*************************************************
  * default range : 0 ~ 1023
@@ -14,12 +14,12 @@
 #define MAX_RANGE	1000
 #define DEFAULT_RANGE	500
 
-void dcmotor_init(void);
-inline void dcmotor_init_run(void)
+void fm_init(void);
+inline void fm_init_run(void)
 {
-	pwmWrite(DCMOTOR_PIN, DEFAULT_RANGE);
+	pwmWrite(FM_PIN, DEFAULT_RANGE);
 }
 
-int dcmotor(int range);
+int fm(int range);
 
 #endif
