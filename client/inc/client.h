@@ -20,26 +20,27 @@
 #define NAME_SIZE 20
 #endif
 
+void * dht11_thread(void *arg);
+void * dd_thread(void *arg);
+void * rw_thread(void *arg);
+void * dr_thread(void *arg);
+void * fm_thread(void *arg);
+void * Character_LCD_init_thread(void *arg);
 void * send_msg(void *arg);
 void * recv_msg(void *arg);
-void * fm_thread(void *arg);
-void * dr_thread(void *arg);
-void * dht11_thread(void *arg);
-void * Character_LCD_init_thread(void *arg);
 
 void error_handling(char *msg);
-
-extern pthread_mutex_t mutex;
 
 #define DATA_MAX_CNT 70
 typedef enum did
 {
-	DID_HT = (uint8_t)0x0,
-	DID_DD = (uint8_t)0x1,
-	DID_RW = (uint8_t)0x2,
-	DID_DR = (uint8_t)0x3,
-	DID_FM = (uint8_t)0x4,
-} did_t;
+	DID_HT		= 0x0,
+	DID_DD		= 0x1,
+	DID_RW		= 0x2,
+	DID_DR		= 0x3,
+	DID_FM		= 0x4,
+	DID_TOTAL_CNT, 
+} did_t; 
 
 /********************************
  * time data

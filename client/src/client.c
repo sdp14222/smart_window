@@ -9,23 +9,25 @@
 char *server_ip = "172.30.1.46";
 char *server_port = "39202";
 
-pthread_mutex_t mutex;
 struct smart_window_send_data	s_data;
+pthread_mutex_t 		mutex_arr[DID_TOTAL_CNT];
 
 int main(void)
 {
 	int sock;
+	int i;
 	struct sockaddr_in serv_addr;
 	void * (*fthread_p[])(void *) = {
+		dht11_thread,
+		dd_thread,
+		rw_thread,
+		dr_thread,
+		fm_thread,
+		Character_LCD_init_thread,
 		send_msg,
 		recv_msg,
-		Character_LCD_init_thread,
-		fm_thread,
-		dr_thread,
-		dht11_thread,
 	};
 	pthread_t pth_arr[THREAD_CNT]; 
-	int i;
 	void * thread_return;
 
 	sock = socket(PF_INET, SOCK_STREAM, 0);
@@ -44,12 +46,10 @@ int main(void)
     	dr_init();
 	CLCD_Init();
 
-	pthread_mutex_init(&mutex, NULL);
-
-	s_data.uid = 1;
-	s_data.ddv.did = DID_DD;
-	s_data.rwv.did = DID_RW;
-
+	for(i = 0; i < DID_TOTAL_CNT; i++)
+	{
+		pthread_mutex_init(&mutex_arr[i], NULL);
+	}
 
 	for(i = 0; i < THREAD_CNT; i++)
 	{
@@ -61,7 +61,10 @@ int main(void)
 		pthread_join(pth_arr[i], &thread_return);
 	}
 
-	pthread_mutex_destroy(&mutex);
+	for(i = 0; i < DID_TOTAL_CNT; i++)
+	{
+		pthread_mutex_destroy(&mutex_arr[i]);
+	}
 
 	close(sock);
 
@@ -83,7 +86,7 @@ void * send_msg(void *arg)
 	{
 		size = 0;
 
-		for(cnt = 0; cnt < 5; cnt++)
+		for(cnt = 0; cnt < 60; cnt++)
 		{
 			delay(1000);
 		}
@@ -131,6 +134,7 @@ void * send_msg(void *arg)
 		msg_n += sizeof(s_data.uid);
 		
 
+		pthread_mutex_lock(&mutex_arr[DID_HT]);
 		// htv
 		memcpy(msg_n, &s_data.htv.did, sizeof(s_data.htv.did));
 		msg_n += sizeof(s_data.htv.did);
@@ -140,8 +144,11 @@ void * send_msg(void *arg)
 
 		memcpy(msg_n, s_data.htv.ht_dat, sizeof(struct ht_data) * s_data.htv.ht_cnt);
 		msg_n += sizeof(struct ht_data) * s_data.htv.ht_cnt;
+		s_data.htv.ht_cnt = 0;
+		pthread_mutex_unlock(&mutex_arr[DID_HT]);
 
 		// ddv
+		pthread_mutex_lock(&mutex_arr[DID_DD]);
 		memcpy(msg_n, &s_data.ddv.did, sizeof(s_data.ddv.did));
 		msg_n += sizeof(s_data.ddv.did);
 
@@ -150,8 +157,11 @@ void * send_msg(void *arg)
 
 		memcpy(msg_n, s_data.ddv.dd_dat, sizeof(struct dd_data) * s_data.ddv.dd_cnt);
 		msg_n += sizeof(struct dd_data) * s_data.ddv.dd_cnt;
+		s_data.ddv.dd_cnt = 0;
+		pthread_mutex_unlock(&mutex_arr[DID_DD]);
 
 		// rwv
+		pthread_mutex_lock(&mutex_arr[DID_RW]);
 		memcpy(msg_n, &s_data.rwv.did, sizeof(s_data.rwv.did));
 		msg_n += sizeof(s_data.rwv.did);
 
@@ -160,8 +170,11 @@ void * send_msg(void *arg)
 
 		memcpy(msg_n, s_data.rwv.rw_dat, sizeof(struct rw_data) * s_data.rwv.rw_cnt);
 		msg_n += sizeof(struct rw_data) * s_data.rwv.rw_cnt;
+		s_data.rwv.rw_cnt = 0;
+		pthread_mutex_unlock(&mutex_arr[DID_RW]);
 
 		// drv
+		pthread_mutex_lock(&mutex_arr[DID_DR]);
 		memcpy(msg_n, &s_data.drv.did, sizeof(s_data.drv.did));
 		msg_n += sizeof(s_data.drv.did);
 
@@ -170,8 +183,11 @@ void * send_msg(void *arg)
 
 		memcpy(msg_n, s_data.drv.dr_dat, sizeof(struct dr_data) * s_data.drv.dr_cnt);
 		msg_n += sizeof(struct dr_data) * s_data.drv.dr_cnt;
+		s_data.drv.dr_cnt = 0;
+		pthread_mutex_unlock(&mutex_arr[DID_DR]);
 
 		// fmv
+		pthread_mutex_lock(&mutex_arr[DID_FM]);
 		memcpy(msg_n, &s_data.fmv.did, sizeof(s_data.fmv.did));
 		msg_n += sizeof(s_data.fmv.did);
 
@@ -180,6 +196,8 @@ void * send_msg(void *arg)
 
 		memcpy(msg_n, s_data.fmv.fm_dat, sizeof(struct fm_data) * s_data.fmv.fm_cnt);
 		msg_n += sizeof(struct fm_data) * s_data.fmv.fm_cnt;
+		s_data.fmv.fm_cnt = 0;
+		pthread_mutex_unlock(&mutex_arr[DID_FM]);
 
 		for(int i = 0; i < size; i++)
 		{

@@ -7,6 +7,7 @@
 #include "client.h"
 
 extern struct smart_window_send_data	s_data;
+extern pthread_mutex_t			mutex_arr[DID_TOTAL_CNT];	
 
 static struct tm* current_time(void);
 static int data_store(did_t did, void *arg);
@@ -16,9 +17,9 @@ static int rw_dat_proc(void *arg);
 static int dr_dat_proc(void *arg);
 static int fm_dat_proc(void *arg);
 
-
 static int ht_dat_proc(void *arg)
 {
+	pthread_mutex_lock(&mutex_arr[DID_HT]);
 	uint8_t *ht_cnt = &s_data.htv.ht_cnt;
 	struct ht_data *htdp = &s_data.htv.ht_dat[*ht_cnt];
 	struct tm* s_tm;
@@ -37,6 +38,7 @@ static int ht_dat_proc(void *arg)
 	htdp->t.sec  = s_tm->tm_sec;
 
 	(*ht_cnt)++;
+	pthread_mutex_unlock(&mutex_arr[DID_HT]);
 
 	return 1;
 }
@@ -53,6 +55,7 @@ static int rw_dat_proc(void *arg)
 
 static int dr_dat_proc(void *arg)
 {
+	pthread_mutex_lock(&mutex_arr[DID_DR]);
 	uint8_t *dr_cnt = &s_data.drv.dr_cnt;
 	struct dr_data *drdp = &s_data.drv.dr_dat[*dr_cnt];
 	struct tm* s_tm;
@@ -69,12 +72,14 @@ static int dr_dat_proc(void *arg)
 	drdp->t.sec  = s_tm->tm_sec;
 
 	(*dr_cnt)++;
+	pthread_mutex_unlock(&mutex_arr[DID_DR]);
 
 	return 1;
 }
 
 static int fm_dat_proc(void *arg)
 {
+	pthread_mutex_lock(&mutex_arr[DID_FM]);
 	uint8_t *fm_cnt = &s_data.fmv.fm_cnt;
 	struct fm_data *fmdp = &s_data.fmv.fm_dat[*fm_cnt];
 	struct tm* s_tm;
@@ -91,6 +96,7 @@ static int fm_dat_proc(void *arg)
 	fmdp->t.sec  = s_tm->tm_sec;
 
 	(*fm_cnt)++;
+	pthread_mutex_unlock(&mutex_arr[DID_FM]);
 
 	return 1;
 }
@@ -197,10 +203,8 @@ void * dht11_thread(void *arg)
 	{
 		if(read_dht11_dat(ret_data))
 		{
-			pthread_mutex_lock(&mutex);
 			sprintf(str0, "H:%2d.%1d%c T:%2d.%1dC",
 				 ret_data[0], ret_data[1], '%', ret_data[2], ret_data[3]);
-			pthread_mutex_unlock(&mutex);
 
 			CLCD_Write(CLCD_ADDR_SET, 0, 0, str0);
 
@@ -213,6 +217,8 @@ void * dht11_thread(void *arg)
 
 void * Character_LCD_init_thread(void *arg)
 {
+	s_data.uid = 1;
+
 	CLCD_Write(CLCD_ADDR_SET, 0, 0, "Hello");
 	CLCD_Write(CLCD_ADDR_SET, 1, 0, "Smart Window");
 
@@ -222,6 +228,19 @@ void * Character_LCD_init_thread(void *arg)
 	printf("CLCD_Clear_Display()\n");
 	CLCD_Clear_Display();
 
+	return NULL;
+}
+
+void * dd_thread(void *arg)
+{
+	s_data.ddv.did = DID_DD;
+	
+	return NULL;
+}
+
+void * rw_thread(void *arg)
+{
+	s_data.rwv.did = DID_RW;
 	return NULL;
 }
 
