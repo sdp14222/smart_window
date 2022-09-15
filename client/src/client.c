@@ -9,9 +9,6 @@
 char *server_ip = "172.30.1.46";
 char *server_port = "39202";
 
-char name[NAME_SIZE] = "[DEFAULT]";
-char msg[BUF_SIZE];
-
 pthread_mutex_t mutex;
 struct smart_window_send_data	s_data;
 
@@ -34,9 +31,9 @@ int main(void)
 	sock = socket(PF_INET, SOCK_STREAM, 0);
 
 	memset(&serv_addr, 0, sizeof(serv_addr));
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = inet_addr(server_ip);
-	serv_addr.sin_port = htons(atoi(server_port));
+	serv_addr.sin_family 		= AF_INET;
+	serv_addr.sin_addr.s_addr 	= inet_addr(server_ip);
+	serv_addr.sin_port 		= htons(atoi(server_port));
 
 	if(connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
 		error_handling("connect() error");
@@ -73,21 +70,7 @@ int main(void)
 
 void * send_msg(void *arg)
 {
-#if 0
 	int sock = *((int*)arg);
-	char name_msg[NAME_SIZE + BUF_SIZE];
-	while(1)
-	{
-		fgets(msg, BUF_SIZE, stdin);
-		if(!strcmp(msg, "q\n") || !strcmp(msg, "Q\n"))
-		{
-			close(sock);
-			exit(0);
-		}
-		sprintf(name_msg, "%s %s", name, msg);
-		write(sock , name_msg, strlen(name_msg));
-	}
-#endif
 	int cnt = 0;
 	uint8_t op = 0;
 	int size = 0;
@@ -198,6 +181,8 @@ void * send_msg(void *arg)
 			printf("msg[%d] : %x\n", i, msg[i]);
 		}
 
+		write(sock , msg, size);
+
 		free(msg);
 	}
 
@@ -206,6 +191,7 @@ void * send_msg(void *arg)
 
 void * recv_msg(void *arg)
 {
+#if 0
 	int sock = *((int*)arg);
 	char name_msg[NAME_SIZE + BUF_SIZE];
 	int str_len;
@@ -219,6 +205,7 @@ void * recv_msg(void *arg)
 		name_msg[str_len] = 0;
 		fputs(name_msg, stdout);
 	}
+#endif
 	return NULL;
 }
 

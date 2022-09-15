@@ -15,8 +15,10 @@
 #include "dht11.h"
 #include "Character_LCD.h"
 
+#if 0
 #define BUF_SIZE 100
 #define NAME_SIZE 20
+#endif
 
 void * send_msg(void *arg);
 void * recv_msg(void *arg);
