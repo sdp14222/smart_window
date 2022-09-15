@@ -3,20 +3,7 @@
  * Modified : 2022.09.15
  * Author   : SangDon Park
  **************************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <pthread.h>
 #include "server.h"
-
-#define MSG_BUF_INIT_SIZE	10
-#define INIT_READ_BYTES		3
-
-#define SERVER_PORT		39202
 
 void * handle_clnt(void * arg);
 void send_msg(char * msg, int len);
