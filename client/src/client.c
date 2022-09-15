@@ -73,10 +73,11 @@ void * send_msg(void *arg)
 	int sock = *((int*)arg);
 	int cnt = 0;
 	uint8_t op = 0;
-	int size = 0;
-	op |= 0b0010;
+	uint16_t size = 0;
 	char *msg = NULL;
 	char *msg_n = NULL;
+
+	op |= 0b0010;
 
 	while(1)
 	{
@@ -120,6 +121,10 @@ void * send_msg(void *arg)
 		// op
 		memcpy(msg_n, &op, sizeof(op));
 		msg_n += sizeof(op);
+
+		// total data size
+		memcpy(msg_n, &size, sizeof(size));
+		msg_n += sizeof(size);
 
 		// uid
 		memcpy(msg_n, &s_data.uid, sizeof(s_data.uid));
