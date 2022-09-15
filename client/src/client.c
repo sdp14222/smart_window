@@ -66,6 +66,7 @@ int main(void)
 
 void * send_msg(void *arg)
 {
+#if 0
 	int sock = *((int*)arg);
 	char name_msg[NAME_SIZE + BUF_SIZE];
 	while(1)
@@ -79,6 +80,48 @@ void * send_msg(void *arg)
 		sprintf(name_msg, "%s %s", name, msg);
 		write(sock , name_msg, strlen(name_msg));
 	}
+#endif
+	int cnt = 0;
+	uint8_t op = 0;
+	int size = 0;
+
+	op |= 0b0010;
+
+	while(1)
+	{
+		for(cnt = 0; cnt < 60; cnt++)
+		{
+			delay(1000);
+		}
+
+		size += 1; // op (0000 0010)
+
+		size += 4; // s_data.uid
+		
+		size += 1; // s_data.htv.did 
+		size += 1; // s_data.htv.ht_cnt 
+		size += s_data.htv.ht_cnt * sizeof(struct ht_data); //s_data.htv.ht_dat[i];
+
+		size += 1; // s_data.ddv.did 
+		size += 1; // s_data.ddv.dd_cnt 
+		size += s_data.ddv.dd_cnt * sizeof(struct dd_data); //s_data.ddv.dd_dat[i];
+
+		size += 1; // s_data.rwv.did 
+		size += 1; // s_data.rwv.dd_cnt 
+		size += s_data.rwv.rw_cnt * sizeof(struct rw_data);//s_data.rwv.rw_dat[i];
+
+		
+		size += 1; // s_data.drv.did 
+		size += 1; // s_data.drv.dr_cnt;
+		size += s_data.drv.dr_cnt * sizeof(struct dr_data); //s_data.drv.dr_dat[i];
+
+		
+		size += 1; // s_data.fmv.did
+		size += 1; // s_data.fmv.fm_cnt 
+		size += s_data.fmv.fm_cnt * sizeof(struct fm_data); //s_data.fmv.fm_dat[i];
+		printf("total size : %d\n", size); 
+	}
+
 	return NULL;
 }
 

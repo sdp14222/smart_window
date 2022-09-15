@@ -19,7 +19,7 @@ static int fm_dat_proc(void *arg);
 
 static int ht_dat_proc(void *arg)
 {
-	unsigned int *ht_cnt = &s_data.htv.ht_cnt;
+	uint8_t *ht_cnt = &s_data.htv.ht_cnt;
 	struct ht_data *htdp = &s_data.htv.ht_dat[*ht_cnt];
 	struct tm* s_tm;
 
@@ -53,7 +53,7 @@ static int rw_dat_proc(void *arg)
 
 static int dr_dat_proc(void *arg)
 {
-	unsigned int *dr_cnt = &s_data.drv.dr_cnt;
+	uint8_t *dr_cnt = &s_data.drv.dr_cnt;
 	struct dr_data *drdp = &s_data.drv.dr_dat[*dr_cnt];
 	struct tm* s_tm;
 
@@ -75,7 +75,7 @@ static int dr_dat_proc(void *arg)
 
 static int fm_dat_proc(void *arg)
 {
-	unsigned int *fm_cnt = &s_data.fmv.fm_cnt;
+	uint8_t *fm_cnt = &s_data.fmv.fm_cnt;
 	struct fm_data *fmdp = &s_data.fmv.fm_dat[*fm_cnt];
 	struct tm* s_tm;
 
@@ -125,24 +125,27 @@ static int data_store(did_t did, void *arg)
 
 void * fm_thread(void *arg)
 {
-	int fan_speed;
+	static int fan_speed;
 	int cnt = 0;
+	int tmp_speed;
 	s_data.fmv.did = DID_FM;
 
 	fm_init_run();
+	fan_speed = fm(-1);
+	data_store(DID_FM, (void *)&fan_speed);
 
 	while(1)
 	{
-		if(cnt == 5)
+		if((tmp_speed = fm(-1)) != fan_speed)
+		{
+			fan_speed = tmp_speed;
+			data_store(DID_FM, (void *)&fan_speed);
+		}
+		else if(cnt == 5)
 		{
 			fan_speed = fm(0);
+			data_store(DID_FM, (void *)&fan_speed);
 		}
-		else
-		{
-			fan_speed = fm(-1);
-		}
-
-		data_store(DID_FM, (void *)&fan_speed);
 
 		cnt++;
 		delay(1000);
@@ -152,24 +155,27 @@ void * fm_thread(void *arg)
 
 void * dr_thread(void *arg)
 {
-	int isOpened;
+	static int isOpened;
 	int cnt = 0;
+	int tmp_isOpened;
 	s_data.drv.did = DID_DR;
 
 	dr_init_run();
+	isOpened = dr(-1);
+	data_store(DID_DR, (void *)&isOpened);
 
 	while(1)
 	{
-		if(cnt == 5)
+		if((tmp_isOpened = dr(-1)) != isOpened)
+		{
+			isOpened = tmp_isOpened;
+			data_store(DID_DR, (void *)&isOpened);
+		}
+		else if(cnt == 5)
 		{
 			isOpened = dr(DR_OPEN);
+			data_store(DID_DR, (void *)&isOpened);
 		}
-		else
-		{
-			isOpened = dr(-1);
-		}
-
-		data_store(DID_DR, (void *)&isOpened);
 
 		cnt++;
 		delay(1000);
@@ -216,9 +222,16 @@ void * Character_LCD_init_thread(void *arg)
 	printf("CLCD_Clear_Display()\n");
 	CLCD_Clear_Display();
 
-	delay(10000);
+	printf("s_data size         : %d\n", sizeof(s_data));
+	printf("s_data.htv size     : %d\n", sizeof(s_data.htv));
+	printf("struct td size      : %d\n", sizeof(struct td));
+	printf("struct ht_data size : %d\n", sizeof(struct ht_data));
+	printf("struct ht size      : %d\n", sizeof(struct ht));
+
+	delay(60000);
 
 	int i;
+	
 	
 	printf("================================================\n");
 	printf("================================================\n");

@@ -29,7 +29,7 @@ void error_handling(char *msg);
 
 extern pthread_mutex_t mutex;
 
-#define DATA_MAX_CNT 80
+#define DATA_MAX_CNT 70
 typedef enum did
 {
 	DID_HT = (uint8_t)0x0,
@@ -42,6 +42,7 @@ typedef enum did
 /********************************
  * time data
  ********************************/
+#pragma pack(push, 1)
 struct td
 {
 	uint16_t	year;
@@ -69,8 +70,8 @@ struct ht_data
  ********************************/
 struct ht
 {
-	did_t		did;		// data id
-	unsigned int	ht_cnt; 	// ht_data count
+	uint8_t		did;		// did_t data id
+	uint8_t		ht_cnt; 	// ht_data count
 	struct ht_data	ht_dat[DATA_MAX_CNT];
 };
 
@@ -88,8 +89,8 @@ struct dd_data
  ********************************/
 struct dd
 {
-	did_t		did;		// data id
-	unsigned int 	dd_cnt;
+	uint8_t		did;		// did_t data id
+	uint8_t		dd_cnt;
 	struct dd_data 	dd_dat[DATA_MAX_CNT];
 };
 
@@ -107,8 +108,8 @@ struct rw_data
  ********************************/
 struct rw
 {
-	did_t		did;		// data id
-	unsigned int	rw_cnt; 
+	uint8_t		did;		// did_t data id
+	uint8_t		rw_cnt; 
 	struct rw_data 	rw_dat[DATA_MAX_CNT];
 };
 
@@ -126,8 +127,8 @@ struct dr_data
  ********************************/
 struct dr 
 {
-	did_t		did;		// data id
-	unsigned int	dr_cnt;
+	uint8_t		did;		// did_t data id
+	uint8_t		dr_cnt;
 	struct dr_data 	dr_dat[DATA_MAX_CNT];
 };
 
@@ -145,8 +146,8 @@ struct fm_data
  ********************************/
 struct fm 
 {
-	did_t		did;		// data id
-	unsigned int	fm_cnt;
+	uint8_t		did;		// did_t data id
+	uint8_t		fm_cnt;
 	struct fm_data	fm_dat[DATA_MAX_CNT];
 };
 
@@ -162,5 +163,6 @@ struct smart_window_send_data
 	struct dr 	drv;
 	struct fm 	fmv;
 };
+#pragma pack(pop)
 
 #endif
