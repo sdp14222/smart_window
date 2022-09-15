@@ -4,8 +4,10 @@
  */
 #include "client.h"
 
-const char server_ip[] = "172.30.1.46";
-const char server_port[] = "39202";
+#define THREAD_CNT ( sizeof(fthread_p) / sizeof(fthread_p[0]) )
+
+char *server_ip = "172.30.1.46";
+char *server_port = "39202";
 
 char name[NAME_SIZE] = "[DEFAULT]";
 char msg[BUF_SIZE];
@@ -17,12 +19,17 @@ int main(void)
 {
 	int sock;
 	struct sockaddr_in serv_addr;
-	pthread_t snd_thread, rcv_thread, 
-		  fm_thread_val, dr_thread_val, dht11_thread_val,
-		  Character_LCD_init_thread_val;
-
+	void * (*fthread_p[])(void *) = {
+		send_msg,
+		recv_msg,
+		Character_LCD_init_thread,
+		fm_thread,
+		dr_thread,
+		dht11_thread,
+	};
+	pthread_t pth_arr[THREAD_CNT]; 
+	int i;
 	void * thread_return;
-
 
 	sock = socket(PF_INET, SOCK_STREAM, 0);
 
@@ -46,23 +53,21 @@ int main(void)
 	s_data.ddv.did = DID_DD;
 	s_data.rwv.did = DID_RW;
 
-	pthread_create(&snd_thread, NULL, send_msg, (void*)&sock);
-	pthread_create(&rcv_thread, NULL, recv_msg, (void*)&sock);
-	pthread_create(&Character_LCD_init_thread_val, NULL, Character_LCD_init_thread, (void*)&sock);
-	pthread_create(&fm_thread_val, NULL, fm_thread, (void*)&sock);
-	pthread_create(&dr_thread_val, NULL, dr_thread, (void*)&sock);
-	pthread_create(&dht11_thread_val, NULL, dht11_thread, (void*)&sock);
 
-	pthread_join(snd_thread, &thread_return);
-	pthread_join(rcv_thread, &thread_return);
-	pthread_join(Character_LCD_init_thread_val, &thread_return);
-	pthread_join(fm_thread_val, &thread_return);
-	pthread_join(dr_thread_val, &thread_return);
-	pthread_join(dht11_thread_val, &thread_return);
+	for(i = 0; i < THREAD_CNT; i++)
+	{
+		pthread_create(&pth_arr[i], NULL, fthread_p[i], (void*)&sock);
+	}
+
+	for(i = 0; i < THREAD_CNT; i++)
+	{
+		pthread_join(pth_arr[i], &thread_return);
+	}
 
 	pthread_mutex_destroy(&mutex);
 
 	close(sock);
+
 	return 0;
 }
 
