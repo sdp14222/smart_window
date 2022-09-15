@@ -99,7 +99,7 @@ struct dd
  ********************************/
 struct rw_data
 {
-	unsigned int	data; // Not yet
+	uint8_t		data; 		// Not yet
 	struct td 	t;
 };
 
@@ -118,7 +118,7 @@ struct rw
  ********************************/
 struct dr_data
 {
-	unsigned int	open;		// door open 
+	uint8_t		open;		// door open 
 	struct td 	t;
 };
 
@@ -137,7 +137,7 @@ struct dr
  ********************************/
 struct fm_data
 {
-	unsigned int	speed; 		// current speed 
+	uint16_t	speed; 		// current speed 
 	struct td 	t;
 };
 

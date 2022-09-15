@@ -4,8 +4,8 @@
  */
 #include "client.h"
 
-char server_ip[] = "172.30.1.46";
-char server_port[] = "39202";
+const char server_ip[] = "172.30.1.46";
+const char server_port[] = "39202";
 
 char name[NAME_SIZE] = "[DEFAULT]";
 char msg[BUF_SIZE];
@@ -43,6 +43,8 @@ int main(void)
 	pthread_mutex_init(&mutex, NULL);
 
 	s_data.uid = 1;
+	s_data.ddv.did = DID_DD;
+	s_data.rwv.did = DID_RW;
 
 	pthread_create(&snd_thread, NULL, send_msg, (void*)&sock);
 	pthread_create(&rcv_thread, NULL, recv_msg, (void*)&sock);
@@ -84,12 +86,15 @@ void * send_msg(void *arg)
 	int cnt = 0;
 	uint8_t op = 0;
 	int size = 0;
-
 	op |= 0b0010;
+	char *msg = NULL;
+	char *msg_n = NULL;
 
 	while(1)
 	{
-		for(cnt = 0; cnt < 60; cnt++)
+		size = 0;
+
+		for(cnt = 0; cnt < 5; cnt++)
 		{
 			delay(1000);
 		}
@@ -120,6 +125,75 @@ void * send_msg(void *arg)
 		size += 1; // s_data.fmv.fm_cnt 
 		size += s_data.fmv.fm_cnt * sizeof(struct fm_data); //s_data.fmv.fm_dat[i];
 		printf("total size : %d\n", size); 
+
+		msg_n = msg = (char *)malloc(size);
+		memset(msg, 0, size);
+		
+		// op
+		memcpy(msg_n, &op, sizeof(op));
+		msg_n += sizeof(op);
+
+		// uid
+		memcpy(msg_n, &s_data.uid, sizeof(s_data.uid));
+		msg_n += sizeof(s_data.uid);
+		
+
+		// htv
+		memcpy(msg_n, &s_data.htv.did, sizeof(s_data.htv.did));
+		msg_n += sizeof(s_data.htv.did);
+
+		memcpy(msg_n, &s_data.htv.ht_cnt, sizeof(s_data.htv.ht_cnt));
+		msg_n += sizeof(s_data.htv.ht_cnt);
+
+		memcpy(msg_n, s_data.htv.ht_dat, sizeof(struct ht_data) * s_data.htv.ht_cnt);
+		msg_n += sizeof(struct ht_data) * s_data.htv.ht_cnt;
+
+		// ddv
+		memcpy(msg_n, &s_data.ddv.did, sizeof(s_data.ddv.did));
+		msg_n += sizeof(s_data.ddv.did);
+
+		memcpy(msg_n, &s_data.ddv.dd_cnt, sizeof(s_data.ddv.dd_cnt));
+		msg_n += sizeof(s_data.ddv.dd_cnt);
+
+		memcpy(msg_n, s_data.ddv.dd_dat, sizeof(struct dd_data) * s_data.ddv.dd_cnt);
+		msg_n += sizeof(struct dd_data) * s_data.ddv.dd_cnt;
+
+		// rwv
+		memcpy(msg_n, &s_data.rwv.did, sizeof(s_data.rwv.did));
+		msg_n += sizeof(s_data.rwv.did);
+
+		memcpy(msg_n, &s_data.rwv.rw_cnt, sizeof(s_data.rwv.rw_cnt));
+		msg_n += sizeof(s_data.rwv.rw_cnt);
+
+		memcpy(msg_n, s_data.rwv.rw_dat, sizeof(struct rw_data) * s_data.rwv.rw_cnt);
+		msg_n += sizeof(struct rw_data) * s_data.rwv.rw_cnt;
+
+		// drv
+		memcpy(msg_n, &s_data.drv.did, sizeof(s_data.drv.did));
+		msg_n += sizeof(s_data.drv.did);
+
+		memcpy(msg_n, &s_data.drv.dr_cnt, sizeof(s_data.drv.dr_cnt));
+		msg_n += sizeof(s_data.drv.dr_cnt);
+
+		memcpy(msg_n, s_data.drv.dr_dat, sizeof(struct dr_data) * s_data.drv.dr_cnt);
+		msg_n += sizeof(struct dr_data) * s_data.drv.dr_cnt;
+
+		// fmv
+		memcpy(msg_n, &s_data.fmv.did, sizeof(s_data.fmv.did));
+		msg_n += sizeof(s_data.fmv.did);
+
+		memcpy(msg_n, &s_data.fmv.fm_cnt, sizeof(s_data.fmv.fm_cnt));
+		msg_n += sizeof(s_data.fmv.fm_cnt);
+
+		memcpy(msg_n, s_data.fmv.fm_dat, sizeof(struct fm_data) * s_data.fmv.fm_cnt);
+		msg_n += sizeof(struct fm_data) * s_data.fmv.fm_cnt;
+
+		for(int i = 0; i < size; i++)
+		{
+			printf("msg[%d] : %x\n", i, msg[i]);
+		}
+
+		free(msg);
 	}
 
 	return NULL;
