@@ -6,6 +6,15 @@
 
 #define THREAD_CNT ( sizeof(fthread_p) / sizeof(fthread_p[0]) )
 
+static void get_send_data_size(uint16_t *size);
+static void send_data_mem_cpy(char **msg_np, uint16_t *size);
+static void send_data_mem_cpy_prv(char **msg_np, uint16_t *size);
+static void send_data_mem_cpy_htv(char **msg_np);
+static void send_data_mem_cpy_ddv(char **msg_np);
+static void send_data_mem_cpy_rwv(char **msg_np);
+static void send_data_mem_cpy_drv(char **msg_np);
+static void send_data_mem_cpy_fmv(char **msg_np);
+
 char *server_ip = "172.30.1.46";
 char *server_port = "39202";
 
@@ -71,16 +80,130 @@ int main(void)
 	return 0;
 }
 
+
+static void send_data_mem_cpy_prv(char **msg_np, uint16_t *size)
+{
+	uint8_t op = 0b0010;
+
+	// op
+	memcpy(*msg_np, &op, sizeof(op));
+	*msg_np += sizeof(op);
+
+	// total data size
+	memcpy(*msg_np, size, sizeof(*size));
+	*msg_np += sizeof(*size);
+
+	// uid
+	memcpy(*msg_np, &s_data.uid, sizeof(s_data.uid));
+	*msg_np += sizeof(s_data.uid);
+
+}
+
+static void send_data_mem_cpy_htv(char **msg_np)
+{
+	// htv
+	pthread_mutex_lock(&mutex_arr[DID_HT]);
+	memcpy(*msg_np, &s_data.htv.did, sizeof(s_data.htv.did));
+	*msg_np += sizeof(s_data.htv.did);
+
+	memcpy(*msg_np, &s_data.htv.ht_cnt, sizeof(s_data.htv.ht_cnt));
+	*msg_np += sizeof(s_data.htv.ht_cnt);
+
+	memcpy(*msg_np, s_data.htv.ht_dat, sizeof(struct ht_data) * s_data.htv.ht_cnt);
+	*msg_np += sizeof(struct ht_data) * s_data.htv.ht_cnt;
+	s_data.htv.ht_cnt = 0;
+	pthread_mutex_unlock(&mutex_arr[DID_HT]);
+}
+
+static void send_data_mem_cpy_ddv(char **msg_np)
+{
+	// ddv
+	pthread_mutex_lock(&mutex_arr[DID_DD]);
+	memcpy(*msg_np, &s_data.ddv.did, sizeof(s_data.ddv.did));
+	*msg_np += sizeof(s_data.ddv.did);
+
+	memcpy(*msg_np, &s_data.ddv.dd_cnt, sizeof(s_data.ddv.dd_cnt));
+	*msg_np += sizeof(s_data.ddv.dd_cnt);
+
+	memcpy(*msg_np, s_data.ddv.dd_dat, sizeof(struct dd_data) * s_data.ddv.dd_cnt);
+	*msg_np += sizeof(struct dd_data) * s_data.ddv.dd_cnt;
+	s_data.ddv.dd_cnt = 0;
+	pthread_mutex_unlock(&mutex_arr[DID_DD]);
+}
+
+static void send_data_mem_cpy_rwv(char **msg_np)
+{
+	// rwv
+	pthread_mutex_lock(&mutex_arr[DID_RW]);
+	memcpy(*msg_np, &s_data.rwv.did, sizeof(s_data.rwv.did));
+	*msg_np += sizeof(s_data.rwv.did);
+
+	memcpy(*msg_np, &s_data.rwv.rw_cnt, sizeof(s_data.rwv.rw_cnt));
+	*msg_np += sizeof(s_data.rwv.rw_cnt);
+
+	memcpy(*msg_np, s_data.rwv.rw_dat, sizeof(struct rw_data) * s_data.rwv.rw_cnt);
+	*msg_np += sizeof(struct rw_data) * s_data.rwv.rw_cnt;
+	s_data.rwv.rw_cnt = 0;
+	pthread_mutex_unlock(&mutex_arr[DID_RW]);
+}
+
+static void send_data_mem_cpy_drv(char **msg_np)
+{
+	// drv
+	pthread_mutex_lock(&mutex_arr[DID_DR]);
+	memcpy(*msg_np, &s_data.drv.did, sizeof(s_data.drv.did));
+	*msg_np += sizeof(s_data.drv.did);
+
+	memcpy(*msg_np, &s_data.drv.dr_cnt, sizeof(s_data.drv.dr_cnt));
+	*msg_np += sizeof(s_data.drv.dr_cnt);
+
+	memcpy(*msg_np, s_data.drv.dr_dat, sizeof(struct dr_data) * s_data.drv.dr_cnt);
+	*msg_np += sizeof(struct dr_data) * s_data.drv.dr_cnt;
+	s_data.drv.dr_cnt = 0;
+	pthread_mutex_unlock(&mutex_arr[DID_DR]);
+}
+
+static void send_data_mem_cpy_fmv(char **msg_np)
+{
+	// fmv
+	pthread_mutex_lock(&mutex_arr[DID_FM]);
+	memcpy(*msg_np, &s_data.fmv.did, sizeof(s_data.fmv.did));
+	*msg_np += sizeof(s_data.fmv.did);
+
+	memcpy(*msg_np, &s_data.fmv.fm_cnt, sizeof(s_data.fmv.fm_cnt));
+	*msg_np += sizeof(s_data.fmv.fm_cnt);
+
+	memcpy(*msg_np, s_data.fmv.fm_dat, sizeof(struct fm_data) * s_data.fmv.fm_cnt);
+	*msg_np += sizeof(struct fm_data) * s_data.fmv.fm_cnt;
+	s_data.fmv.fm_cnt = 0;
+	pthread_mutex_unlock(&mutex_arr[DID_FM]);
+}
+
+static void send_data_mem_cpy(char **msg_np, uint16_t *size)
+{
+	int i;
+	void (*fp[])(char **) = {
+		send_data_mem_cpy_htv,
+		send_data_mem_cpy_ddv,
+		send_data_mem_cpy_rwv,
+		send_data_mem_cpy_drv,
+		send_data_mem_cpy_fmv,
+	};
+	send_data_mem_cpy_prv(msg_np, size);
+
+	for(i = 0; i < (sizeof(fp) / sizeof(fp[0])); i++)
+	{
+		fp[i](msg_np);
+	}
+}
+
 void * send_msg(void *arg)
 {
 	int sock = *((int*)arg);
 	int cnt = 0;
-	uint8_t op = 0;
 	uint16_t size = 0;
 	char *msg = NULL;
 	char *msg_n = NULL;
-
-	op |= 0b0010;
 
 	while(1)
 	{
@@ -91,113 +214,19 @@ void * send_msg(void *arg)
 			delay(1000);
 		}
 
-		size += 1; // op (0000 0010)
-
-		size += 4; // s_data.uid
-		
-		size += 1; // s_data.htv.did 
-		size += 1; // s_data.htv.ht_cnt 
-		size += s_data.htv.ht_cnt * sizeof(struct ht_data); //s_data.htv.ht_dat[i];
-
-		size += 1; // s_data.ddv.did 
-		size += 1; // s_data.ddv.dd_cnt 
-		size += s_data.ddv.dd_cnt * sizeof(struct dd_data); //s_data.ddv.dd_dat[i];
-
-		size += 1; // s_data.rwv.did 
-		size += 1; // s_data.rwv.dd_cnt 
-		size += s_data.rwv.rw_cnt * sizeof(struct rw_data);//s_data.rwv.rw_dat[i];
-
-		
-		size += 1; // s_data.drv.did 
-		size += 1; // s_data.drv.dr_cnt;
-		size += s_data.drv.dr_cnt * sizeof(struct dr_data); //s_data.drv.dr_dat[i];
-
-		
-		size += 1; // s_data.fmv.did
-		size += 1; // s_data.fmv.fm_cnt 
-		size += s_data.fmv.fm_cnt * sizeof(struct fm_data); //s_data.fmv.fm_dat[i];
+		get_send_data_size(&size);
 		printf("total size : %d\n", size); 
 
 		msg_n = msg = (char *)malloc(size);
+		if(msg == NULL)
+		{
+			printf("malloc failed\n");
+			return NULL;
+		}
+
 		memset(msg, 0, size);
-		
-		// op
-		memcpy(msg_n, &op, sizeof(op));
-		msg_n += sizeof(op);
 
-		// total data size
-		memcpy(msg_n, &size, sizeof(size));
-		msg_n += sizeof(size);
-
-		// uid
-		memcpy(msg_n, &s_data.uid, sizeof(s_data.uid));
-		msg_n += sizeof(s_data.uid);
-		
-
-		pthread_mutex_lock(&mutex_arr[DID_HT]);
-		// htv
-		memcpy(msg_n, &s_data.htv.did, sizeof(s_data.htv.did));
-		msg_n += sizeof(s_data.htv.did);
-
-		memcpy(msg_n, &s_data.htv.ht_cnt, sizeof(s_data.htv.ht_cnt));
-		msg_n += sizeof(s_data.htv.ht_cnt);
-
-		memcpy(msg_n, s_data.htv.ht_dat, sizeof(struct ht_data) * s_data.htv.ht_cnt);
-		msg_n += sizeof(struct ht_data) * s_data.htv.ht_cnt;
-		s_data.htv.ht_cnt = 0;
-		pthread_mutex_unlock(&mutex_arr[DID_HT]);
-
-		// ddv
-		pthread_mutex_lock(&mutex_arr[DID_DD]);
-		memcpy(msg_n, &s_data.ddv.did, sizeof(s_data.ddv.did));
-		msg_n += sizeof(s_data.ddv.did);
-
-		memcpy(msg_n, &s_data.ddv.dd_cnt, sizeof(s_data.ddv.dd_cnt));
-		msg_n += sizeof(s_data.ddv.dd_cnt);
-
-		memcpy(msg_n, s_data.ddv.dd_dat, sizeof(struct dd_data) * s_data.ddv.dd_cnt);
-		msg_n += sizeof(struct dd_data) * s_data.ddv.dd_cnt;
-		s_data.ddv.dd_cnt = 0;
-		pthread_mutex_unlock(&mutex_arr[DID_DD]);
-
-		// rwv
-		pthread_mutex_lock(&mutex_arr[DID_RW]);
-		memcpy(msg_n, &s_data.rwv.did, sizeof(s_data.rwv.did));
-		msg_n += sizeof(s_data.rwv.did);
-
-		memcpy(msg_n, &s_data.rwv.rw_cnt, sizeof(s_data.rwv.rw_cnt));
-		msg_n += sizeof(s_data.rwv.rw_cnt);
-
-		memcpy(msg_n, s_data.rwv.rw_dat, sizeof(struct rw_data) * s_data.rwv.rw_cnt);
-		msg_n += sizeof(struct rw_data) * s_data.rwv.rw_cnt;
-		s_data.rwv.rw_cnt = 0;
-		pthread_mutex_unlock(&mutex_arr[DID_RW]);
-
-		// drv
-		pthread_mutex_lock(&mutex_arr[DID_DR]);
-		memcpy(msg_n, &s_data.drv.did, sizeof(s_data.drv.did));
-		msg_n += sizeof(s_data.drv.did);
-
-		memcpy(msg_n, &s_data.drv.dr_cnt, sizeof(s_data.drv.dr_cnt));
-		msg_n += sizeof(s_data.drv.dr_cnt);
-
-		memcpy(msg_n, s_data.drv.dr_dat, sizeof(struct dr_data) * s_data.drv.dr_cnt);
-		msg_n += sizeof(struct dr_data) * s_data.drv.dr_cnt;
-		s_data.drv.dr_cnt = 0;
-		pthread_mutex_unlock(&mutex_arr[DID_DR]);
-
-		// fmv
-		pthread_mutex_lock(&mutex_arr[DID_FM]);
-		memcpy(msg_n, &s_data.fmv.did, sizeof(s_data.fmv.did));
-		msg_n += sizeof(s_data.fmv.did);
-
-		memcpy(msg_n, &s_data.fmv.fm_cnt, sizeof(s_data.fmv.fm_cnt));
-		msg_n += sizeof(s_data.fmv.fm_cnt);
-
-		memcpy(msg_n, s_data.fmv.fm_dat, sizeof(struct fm_data) * s_data.fmv.fm_cnt);
-		msg_n += sizeof(struct fm_data) * s_data.fmv.fm_cnt;
-		s_data.fmv.fm_cnt = 0;
-		pthread_mutex_unlock(&mutex_arr[DID_FM]);
+		send_data_mem_cpy(&msg_n, &size);
 
 		for(int i = 0; i < size; i++)
 		{
@@ -237,4 +266,35 @@ void error_handling(char *msg)
 	fputs(msg, stderr);
 	fputc('\n', stderr);
 	exit(1);
+}
+
+static void get_send_data_size(uint16_t *size)
+{
+	int __size = 0;
+	__size += 1; // op (0000 0010)
+
+	__size += 4; // s_data.uid
+	
+	__size += 1; // s_data.htv.did 
+	__size += 1; // s_data.htv.ht_cnt 
+	__size += s_data.htv.ht_cnt * sizeof(struct ht_data); //s_data.htv.ht_dat[i];
+
+	__size += 1; // s_data.ddv.did 
+	__size += 1; // s_data.ddv.dd_cnt 
+	__size += s_data.ddv.dd_cnt * sizeof(struct dd_data); //s_data.ddv.dd_dat[i];
+
+	__size += 1; // s_data.rwv.did 
+	__size += 1; // s_data.rwv.dd_cnt 
+	__size += s_data.rwv.rw_cnt * sizeof(struct rw_data);//s_data.rwv.rw_dat[i];
+
+	
+	__size += 1; // s_data.drv.did 
+	__size += 1; // s_data.drv.dr_cnt;
+	__size += s_data.drv.dr_cnt * sizeof(struct dr_data); //s_data.drv.dr_dat[i];
+
+	
+	__size += 1; // s_data.fmv.did
+	__size += 1; // s_data.fmv.fm_cnt 
+	__size += s_data.fmv.fm_cnt * sizeof(struct fm_data); //s_data.fmv.fm_dat[i];
+	*size = __size;
 }
