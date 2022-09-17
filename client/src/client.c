@@ -15,9 +15,6 @@ static void send_data_mem_cpy_rwv(char **msg_np);
 static void send_data_mem_cpy_drv(char **msg_np);
 static void send_data_mem_cpy_fmv(char **msg_np);
 
-char *server_ip = "172.30.1.46";
-char *server_port = "39202";
-
 struct smart_window_send_data	s_data;
 pthread_mutex_t 		mutex_arr[DID_TOTAL_CNT];
 
@@ -43,8 +40,8 @@ int main(void)
 
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family 		= AF_INET;
-	serv_addr.sin_addr.s_addr 	= inet_addr(server_ip);
-	serv_addr.sin_port 		= htons(atoi(server_port));
+	serv_addr.sin_addr.s_addr 	= inet_addr(SERVER_IP);
+	serv_addr.sin_port 		= htons(atoi(SERVER_PORT));
 
 	if(connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
 		error_handling("connect() error");

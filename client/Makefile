@@ -1,6 +1,6 @@
 # ===========================================
 # Created	: 2022.08.31
-# Last Modified	: 2022.09.05
+# Last Modified	: 2022.09.17
 # Author	: SangDon Park
 # ===========================================
 
@@ -13,7 +13,9 @@ CFLAGS = -Wall -O2 -lwiringPi -D_REENTRANT -lpthread
 LDFLAGS =
 
 # Header File Path
-INCLUDE = -Iinc/
+COMMON_INC = $(shell pwd)/../inc/
+INCLUDE += -Iinc/
+INCLUDE += -I$(COMMON_INC)
 
 # Source File Path 
 SRC_DIR = ./src
@@ -34,18 +36,7 @@ OBJS += $(SRC_DIR)/Character_LCD.o
 OBJS += $(SRC_DIR)/client_thread.o
 
 
-#all: $(OBJS) 
-#	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
-
-#all: objs
-
-#objs: client.o
-#	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
-
-#$(TARGET): $(SRC_DIR)/$(TARGET).o
-#	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
 all: TARGET 
-#	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
 
 TARGET: $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
