@@ -24,7 +24,6 @@ struct init_msg_info
 	uint32_t		uid;
 };
 
-void * handle_clnt(void *arg);
 void * read_msg(void *arg);
 void * send_msg(void *arg);
 
