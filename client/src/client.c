@@ -1,6 +1,7 @@
 /*
- * Create date : 2022.08.31
- * Author : SangDon Park
+ * Created  : 2022.08.31
+ * Modified : 2022.09.18
+ * Author   : SangDon Park
  */
 #include "client.h"
 
@@ -9,11 +10,14 @@
 static void get_send_data_size(uint16_t *size);
 static void send_data_mem_cpy(char **msg_np, uint16_t *size);
 static void send_data_mem_cpy_prv(char **msg_np, uint16_t *size);
+static void send_data_mem_cpy_all(char **msg_np);
+#if 0
 static void send_data_mem_cpy_htv(char **msg_np);
 static void send_data_mem_cpy_ddv(char **msg_np);
 static void send_data_mem_cpy_rwv(char **msg_np);
 static void send_data_mem_cpy_drv(char **msg_np);
 static void send_data_mem_cpy_fmv(char **msg_np);
+#endif
 
 struct smart_window_send_data	s_data;
 pthread_mutex_t 		mutex_arr[DID_TOTAL_CNT];
@@ -108,6 +112,7 @@ static void send_data_mem_cpy_prv(char **msg_np, uint16_t *size)
 
 }
 
+#if 0
 static void send_data_mem_cpy_htv(char **msg_np)
 {
 	// htv
@@ -192,7 +197,7 @@ static void send_data_mem_cpy_rwv(char **msg_np)
 	*msg_np += sizeof(s_data.smv.sdi[DID_RW].did);
 
 	memcpy(*msg_np, &s_data.smv.sdi[DID_RW].cnt, sizeof(s_data.smv.sdi[DID_RW].cnt));
-	*msg_np += sizeof(s_data.smv.sdi[DID_RW].did);
+	*msg_np += sizeof(s_data.smv.sdi[DID_RW].cnt);
 
 	memcpy(*msg_np, s_data.smv.sd.rw, sizeof(struct rw_data) * cnt);
 	*msg_np += sizeof(struct rw_data) * cnt;
@@ -254,7 +259,7 @@ static void send_data_mem_cpy_fmv(char **msg_np)
 	*msg_np += sizeof(s_data.smv.sdi[DID_FM].did);
 
 	memcpy(*msg_np, &s_data.smv.sdi[DID_FM].cnt, sizeof(s_data.smv.sdi[DID_FM].cnt));
-	*msg_np += sizeof(s_data.smv.sdi[DID_FM].did);
+	*msg_np += sizeof(s_data.smv.sdi[DID_FM].cnt);
 
 	memcpy(*msg_np, s_data.smv.sd.fm, sizeof(struct fm_data) * cnt);
 	*msg_np += sizeof(struct fm_data) * cnt;
@@ -262,9 +267,59 @@ static void send_data_mem_cpy_fmv(char **msg_np)
 	s_data.smv.sdi[DID_FM].cnt = 0;
 	pthread_mutex_unlock(&mutex_arr[DID_FM]);
 }
+#endif
+
+static void send_data_mem_cpy_all(char **msg_np)
+{
+	struct sm 	*smp = &s_data.smv;
+	struct sm_data	*sdp = &smp->sd;
+	int i;
+	uint8_t did, cnt;
+
+	for(i = 0; i < DID_TOTAL_CNT; i++)
+	{
+		pthread_mutex_lock(&mutex_arr[i]);
+		did = smp->sdi[i].did;
+		memcpy(*msg_np, &did, sizeof(did));
+		*msg_np += sizeof(did);
+
+		cnt = smp->sdi[i].cnt;
+		memcpy(*msg_np, &cnt, sizeof(cnt));
+		*msg_np += sizeof(cnt);
+
+		switch(i)
+		{
+		case DID_HT:
+			memcpy(*msg_np, sdp->ht, sizeof(struct ht_data) * cnt);
+			*msg_np += sizeof(struct ht_data) * cnt;
+			break;
+		case DID_DD:
+			memcpy(*msg_np, sdp->dd, sizeof(struct dd_data) * cnt);
+			*msg_np += sizeof(struct dd_data) * cnt;
+			break;
+		case DID_RW:
+			memcpy(*msg_np, sdp->rw, sizeof(struct rw_data) * cnt);
+			*msg_np += sizeof(struct rw_data) * cnt;
+			break;
+		case DID_DR:
+			memcpy(*msg_np, sdp->dr, sizeof(struct dr_data) * cnt);
+			*msg_np += sizeof(struct dr_data) * cnt;
+			break;
+		case DID_FM:
+			memcpy(*msg_np, sdp->fm, sizeof(struct fm_data) * cnt);
+			*msg_np += sizeof(struct fm_data) * cnt;
+			break;
+		default:
+			break;
+		}
+		smp->sdi[i].cnt = 0;
+		pthread_mutex_unlock(&mutex_arr[i]);
+	}
+}
 
 static void send_data_mem_cpy(char **msg_np, uint16_t *size)
 {
+#if 0
 	int i;
 	void (*fp[])(char **) = {
 		send_data_mem_cpy_htv,
@@ -273,12 +328,16 @@ static void send_data_mem_cpy(char **msg_np, uint16_t *size)
 		send_data_mem_cpy_drv,
 		send_data_mem_cpy_fmv,
 	};
+#endif
 	send_data_mem_cpy_prv(msg_np, size);
+	send_data_mem_cpy_all(msg_np);
 
+#if 0
 	for(i = 0; i < (sizeof(fp) / sizeof(fp[0])); i++)
 	{
 		fp[i](msg_np);
 	}
+#endif
 }
 
 void * send_msg(void *arg)
