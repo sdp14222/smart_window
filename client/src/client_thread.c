@@ -1,8 +1,9 @@
 /**********************************************************
- * Created : 2022.09.13 
- * Author  : SangDon Park
+ * Created  : 2022.09.13 
+ * Modified : 2022.09.18
+ * Author   : SangDon Park
  * 
- * Desc    : Client.c threads & functions
+ * Desc     : Client.c threads & functions
  **********************************************************/
 #include "client.h"
 
@@ -11,6 +12,7 @@ extern pthread_mutex_t			mutex_arr[DID_TOTAL_CNT];
 
 static struct tm* current_time(void);
 static int data_store(did_t did, void *arg);
+static int time_store(struct td *tdp);
 static int ht_dat_proc(void *arg);
 static int dd_dat_proc(void *arg);
 static int rw_dat_proc(void *arg);
@@ -28,13 +30,13 @@ static int ht_dat_proc(void *arg)
 	struct ht_data *htdp = &s_data.htv.ht_dat[*ht_cnt];
 #endif
 	struct ht_data *htdp = &s_data.smv.sd.ht[*ht_cnt];
-	struct tm* s_tm;
 
 	htdp->h_int = ((int *)arg)[0];
 	htdp->h_flt = ((int *)arg)[1];
 	htdp->t_int = ((int *)arg)[2];
 	htdp->t_flt = ((int *)arg)[3];
 
+#if 0
 	s_tm = current_time();
 	htdp->t.year = s_tm->tm_year;
 	htdp->t.mon  = s_tm->tm_mon;
@@ -42,7 +44,9 @@ static int ht_dat_proc(void *arg)
 	htdp->t.hour = s_tm->tm_hour;
 	htdp->t.min  = s_tm->tm_min;
 	htdp->t.sec  = s_tm->tm_sec;
+#endif
 
+	time_store(&htdp->t);
 	(*ht_cnt)++;
 	pthread_mutex_unlock(&mutex_arr[DID_HT]);
 
@@ -70,10 +74,10 @@ static int dr_dat_proc(void *arg)
 	struct dr_data *drdp = &s_data.drv.dr_dat[*dr_cnt];
 #endif
 	struct dr_data *drdp = &s_data.smv.sd.dr[*dr_cnt];
-	struct tm* s_tm;
 
 	drdp->open = *(int *)arg;
 
+#if 0
 	s_tm = current_time();
 
 	drdp->t.year = s_tm->tm_year;
@@ -82,7 +86,9 @@ static int dr_dat_proc(void *arg)
 	drdp->t.hour = s_tm->tm_hour;
 	drdp->t.min  = s_tm->tm_min;
 	drdp->t.sec  = s_tm->tm_sec;
+#endif
 
+	time_store(&drdp->t);
 	(*dr_cnt)++;
 	pthread_mutex_unlock(&mutex_arr[DID_DR]);
 
@@ -98,10 +104,10 @@ static int fm_dat_proc(void *arg)
 	uint8_t *fm_cnt = &s_data.smv.sdi[DID_FM].cnt;
 
 	struct fm_data *fmdp = &s_data.smv.sd.fm[*fm_cnt];
-	struct tm* s_tm;
 
 	fmdp->speed = *(uint16_t *)arg;
 
+#if 0
 	s_tm = current_time();
 
 	fmdp->t.year = s_tm->tm_year;
@@ -110,10 +116,28 @@ static int fm_dat_proc(void *arg)
 	fmdp->t.hour = s_tm->tm_hour;
 	fmdp->t.min  = s_tm->tm_min;
 	fmdp->t.sec  = s_tm->tm_sec;
+#endif
 
+	time_store(&fmdp->t);
 	(*fm_cnt)++;
 	pthread_mutex_unlock(&mutex_arr[DID_FM]);
 
+	return 1;
+}
+
+static int time_store(struct td *tdp)
+{
+	struct tm* s_tm;
+
+	s_tm = current_time();
+
+	tdp->year = s_tm->tm_year;
+	tdp->mon  = s_tm->tm_mon;
+	tdp->day  = s_tm->tm_mday;
+	tdp->hour = s_tm->tm_hour;
+	tdp->min  = s_tm->tm_min;
+	tdp->sec  = s_tm->tm_sec;
+	
 	return 1;
 }
 
@@ -150,9 +174,7 @@ void * fm_thread(void *arg)
 	static int fan_speed;
 	int cnt = 0;
 	int tmp_speed;
-#if 0
-	s_data.fmv.did = DID_FM;
-#endif
+
 	s_data.smv.sdi[DID_FM].did = DID_FM;
 
 	fm_init_run();
@@ -183,9 +205,7 @@ void * dr_thread(void *arg)
 	static int isOpened;
 	int cnt = 0;
 	int tmp_isOpened;
-#if 0
-	s_data.drv.did = DID_DR;
-#endif
+
 	s_data.smv.sdi[DID_DR].did = DID_DR;
 
 	dr_init_run();
@@ -217,9 +237,6 @@ void * dht11_thread(void *arg)
 	int ret_data[5] = {0};
 	char str0[16];
 
-#if 0
-	s_data.htv.did = DID_HT;
-#endif
 	s_data.smv.sdi[DID_HT].did = DID_HT;
 
 	delay(2000);
@@ -258,9 +275,6 @@ void * Character_LCD_init_thread(void *arg)
 
 void * dd_thread(void *arg)
 {
-#if 0
-	s_data.ddv.did = DID_DD;
-#endif
 	s_data.smv.sdi[DID_DD].did = DID_DD;
 	
 	return NULL;
@@ -268,9 +282,6 @@ void * dd_thread(void *arg)
 
 void * rw_thread(void *arg)
 {
-#if 0
-	s_data.rwv.did = DID_RW;
-#endif
 	s_data.smv.sdi[DID_RW].did = DID_RW;
 
 	return NULL;
@@ -284,7 +295,7 @@ static struct tm* current_time(void)
 	t    = time(NULL);
 	s_tm = *localtime(&t);
 
-	s_tm.tm_year += 1900;
+	s_tm.tm_year = htons(s_tm.tm_year + 1900); // store as big endian
 	s_tm.tm_mon  += 1;
 
 	return &s_tm;
