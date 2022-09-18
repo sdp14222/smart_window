@@ -1,6 +1,6 @@
 # ===========================================
 # Created       : 2022.09.15
-# Last Modified : 2022.09.15
+# Last Modified : 2022.09.17
 # Author        : SangDon Park
 # ===========================================
 
@@ -13,7 +13,9 @@ CFLAGS = -Wall -O2 -D_REENTRANT -lpthread
 LDFLAGS =
 
 # Header File Path
+COMMON_INC = $(shell pwd)/../inc/
 INCLUDE = -Iinc/
+INCLUDE += -I$(COMMON_INC)
 
 # Source File Path
 SRC_DIR = ./src
@@ -28,18 +30,7 @@ $(SRC_DIR)/%.o: $(SRC_DIR)/%.c
 
 OBJS += $(SRC_DIR)/server.o
 
-#all: $(OBJS)
-#       $(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
-
-#all: objs
-
-#objs: client.o
-#       $(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
-
-#$(TARGET): $(SRC_DIR)/$(TARGET).o
-#       $(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
 all: TARGET
-#       $(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
 
 TARGET: $(OBJS)
 	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
