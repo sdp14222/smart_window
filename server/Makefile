@@ -29,6 +29,7 @@ $(SRC_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) -c $(CFLAGS) $(INCLUDE) -o $@ $^
 
 OBJS += $(SRC_DIR)/server.o
+OBJS += $(SRC_DIR)/server_thread.o
 
 all: TARGET
 

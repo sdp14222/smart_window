@@ -26,5 +26,6 @@ struct init_msg_info
 
 void * handle_clnt(void *arg);
 void * read_msg(void *arg);
+void * send_msg(void *arg);
 
 #endif
