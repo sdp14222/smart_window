@@ -21,7 +21,7 @@ typedef enum did
 #pragma pack(push, 1)
 struct td
 {
-	uint16_t	year;
+	uint16_t	year;	// store as big endian
 	uint8_t		mon;
 	uint8_t 	day;
 	uint8_t 	hour;
@@ -41,6 +41,7 @@ struct ht_data
 	struct td 	t; 	// time
 };
 
+#if 0
 /********************************
  * humidity & temperature all data 
  ********************************/
@@ -50,6 +51,7 @@ struct ht
 	uint8_t		ht_cnt; 	// ht_data count
 	struct ht_data	ht_dat[DATA_MAX_CNT];
 };
+#endif
 
 /********************************
  * dust data
@@ -60,6 +62,7 @@ struct dd_data
 	struct td 	t;
 };
 
+#if 0
 /********************************
  * dust all data
  ********************************/
@@ -69,6 +72,7 @@ struct dd
 	uint8_t		dd_cnt;
 	struct dd_data 	dd_dat[DATA_MAX_CNT];
 };
+#endif
 
 /********************************
  * rain water data
@@ -79,6 +83,7 @@ struct rw_data
 	struct td 	t;
 };
 
+#if 0
 /********************************
  * rain water all data
  ********************************/
@@ -88,6 +93,7 @@ struct rw
 	uint8_t		rw_cnt; 
 	struct rw_data 	rw_dat[DATA_MAX_CNT];
 };
+#endif
 
 /********************************
  * door data
@@ -98,6 +104,7 @@ struct dr_data
 	struct td 	t;
 };
 
+#if 0
 /********************************
  * door all data
  ********************************/
@@ -107,6 +114,7 @@ struct dr
 	uint8_t		dr_cnt;
 	struct dr_data 	dr_dat[DATA_MAX_CNT];
 };
+#endif
 
 /********************************
  * fan motor data
@@ -117,6 +125,7 @@ struct fm_data
 	struct td 	t;
 };
 
+#if 0
 /********************************
  * fan motor all data
  ********************************/
@@ -126,6 +135,28 @@ struct fm
 	uint8_t		fm_cnt;
 	struct fm_data	fm_dat[DATA_MAX_CNT];
 };
+#endif
+
+struct sm_data
+{
+	struct ht_data ht[DATA_MAX_CNT];
+	struct dd_data dd[DATA_MAX_CNT];
+	struct rw_data rw[DATA_MAX_CNT];
+	struct dr_data dr[DATA_MAX_CNT];
+	struct fm_data fm[DATA_MAX_CNT];
+};
+
+struct sm_data_info
+{
+	uint8_t		did;
+	uint8_t		cnt; 
+};
+
+struct sm
+{
+	struct sm_data_info	sdi[DID_TOTAL_CNT];
+	struct sm_data 		sd;
+};
 
 /********************************
  * To send data all
@@ -133,11 +164,14 @@ struct fm
 struct smart_window_send_data
 {
 	uint32_t 	uid;
+#if 0
 	struct ht 	htv;
 	struct dd 	ddv;
 	struct rw 	rwv;
 	struct dr 	drv;
 	struct fm 	fmv;
+#endif
+	struct sm	smv;
 };
 #pragma pack(pop)
 

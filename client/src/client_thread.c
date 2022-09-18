@@ -20,8 +20,14 @@ static int fm_dat_proc(void *arg);
 static int ht_dat_proc(void *arg)
 {
 	pthread_mutex_lock(&mutex_arr[DID_HT]);
+#if 0
 	uint8_t *ht_cnt = &s_data.htv.ht_cnt;
+#endif
+	uint8_t *ht_cnt = &s_data.smv.sdi[DID_HT].cnt;
+#if 0
 	struct ht_data *htdp = &s_data.htv.ht_dat[*ht_cnt];
+#endif
+	struct ht_data *htdp = &s_data.smv.sd.ht[*ht_cnt];
 	struct tm* s_tm;
 
 	htdp->h_int = ((int *)arg)[0];
@@ -56,8 +62,14 @@ static int rw_dat_proc(void *arg)
 static int dr_dat_proc(void *arg)
 {
 	pthread_mutex_lock(&mutex_arr[DID_DR]);
+#if 0
 	uint8_t *dr_cnt = &s_data.drv.dr_cnt;
+#endif
+	uint8_t *dr_cnt = &s_data.smv.sdi[DID_DR].cnt;
+#if 0
 	struct dr_data *drdp = &s_data.drv.dr_dat[*dr_cnt];
+#endif
+	struct dr_data *drdp = &s_data.smv.sd.dr[*dr_cnt];
 	struct tm* s_tm;
 
 	drdp->open = *(int *)arg;
@@ -80,11 +92,15 @@ static int dr_dat_proc(void *arg)
 static int fm_dat_proc(void *arg)
 {
 	pthread_mutex_lock(&mutex_arr[DID_FM]);
+#if 0
 	uint8_t *fm_cnt = &s_data.fmv.fm_cnt;
-	struct fm_data *fmdp = &s_data.fmv.fm_dat[*fm_cnt];
+#endif
+	uint8_t *fm_cnt = &s_data.smv.sdi[DID_FM].cnt;
+
+	struct fm_data *fmdp = &s_data.smv.sd.fm[*fm_cnt];
 	struct tm* s_tm;
 
-	fmdp->speed = *(int *)arg;
+	fmdp->speed = *(uint16_t *)arg;
 
 	s_tm = current_time();
 
@@ -134,7 +150,10 @@ void * fm_thread(void *arg)
 	static int fan_speed;
 	int cnt = 0;
 	int tmp_speed;
+#if 0
 	s_data.fmv.did = DID_FM;
+#endif
+	s_data.smv.sdi[DID_FM].did = DID_FM;
 
 	fm_init_run();
 	fan_speed = fm(-1);
@@ -164,7 +183,10 @@ void * dr_thread(void *arg)
 	static int isOpened;
 	int cnt = 0;
 	int tmp_isOpened;
+#if 0
 	s_data.drv.did = DID_DR;
+#endif
+	s_data.smv.sdi[DID_DR].did = DID_DR;
 
 	dr_init_run();
 	isOpened = dr(-1);
@@ -195,7 +217,10 @@ void * dht11_thread(void *arg)
 	int ret_data[5] = {0};
 	char str0[16];
 
+#if 0
 	s_data.htv.did = DID_HT;
+#endif
+	s_data.smv.sdi[DID_HT].did = DID_HT;
 
 	delay(2000);
 
@@ -233,14 +258,21 @@ void * Character_LCD_init_thread(void *arg)
 
 void * dd_thread(void *arg)
 {
+#if 0
 	s_data.ddv.did = DID_DD;
+#endif
+	s_data.smv.sdi[DID_DD].did = DID_DD;
 	
 	return NULL;
 }
 
 void * rw_thread(void *arg)
 {
+#if 0
 	s_data.rwv.did = DID_RW;
+#endif
+	s_data.smv.sdi[DID_RW].did = DID_RW;
+
 	return NULL;
 }
 

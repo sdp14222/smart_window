@@ -81,17 +81,29 @@ int main(void)
 static void send_data_mem_cpy_prv(char **msg_np, uint16_t *size)
 {
 	uint8_t op = 0b0010;
+	uint16_t __size = *size;
+	uint32_t __uid = s_data.uid;
 
 	// op
 	memcpy(*msg_np, &op, sizeof(op));
 	*msg_np += sizeof(op);
 
 	// total data size
+#if 0
 	memcpy(*msg_np, size, sizeof(*size));
+	*msg_np += sizeof(*size);
+#endif
+	__size = htons(__size);
+	memcpy(*msg_np, &__size, sizeof(*size));
 	*msg_np += sizeof(*size);
 
 	// uid
+#if 0
 	memcpy(*msg_np, &s_data.uid, sizeof(s_data.uid));
+	*msg_np += sizeof(s_data.uid);
+#endif
+	__uid = htonl(s_data.uid);
+	memcpy(*msg_np, &__uid, sizeof(s_data.uid));
 	*msg_np += sizeof(s_data.uid);
 
 }
@@ -100,6 +112,7 @@ static void send_data_mem_cpy_htv(char **msg_np)
 {
 	// htv
 	pthread_mutex_lock(&mutex_arr[DID_HT]);
+#if 0
 	memcpy(*msg_np, &s_data.htv.did, sizeof(s_data.htv.did));
 	*msg_np += sizeof(s_data.htv.did);
 
@@ -109,12 +122,27 @@ static void send_data_mem_cpy_htv(char **msg_np)
 	memcpy(*msg_np, s_data.htv.ht_dat, sizeof(struct ht_data) * s_data.htv.ht_cnt);
 	*msg_np += sizeof(struct ht_data) * s_data.htv.ht_cnt;
 	s_data.htv.ht_cnt = 0;
+#endif
+	uint8_t cnt = s_data.smv.sdi[DID_HT].cnt;
+	uint8_t did = s_data.smv.sdi[DID_HT].did;
+
+	memcpy(*msg_np, &s_data.smv.sdi[DID_HT].did, sizeof(s_data.smv.sdi[DID_HT].did));
+	*msg_np += sizeof(s_data.smv.sdi[DID_HT].did);
+
+	memcpy(*msg_np, &s_data.smv.sdi[DID_HT].cnt, sizeof(s_data.smv.sdi[DID_HT].cnt));
+	*msg_np += sizeof(s_data.smv.sdi[DID_HT].cnt);
+
+	memcpy(*msg_np, s_data.smv.sd.ht, sizeof(struct ht_data) * cnt);
+	*msg_np += sizeof(struct ht_data) * cnt;
+	
+	s_data.smv.sdi[DID_HT].cnt = 0;
 	pthread_mutex_unlock(&mutex_arr[DID_HT]);
 }
 
 static void send_data_mem_cpy_ddv(char **msg_np)
 {
 	// ddv
+#if 0
 	pthread_mutex_lock(&mutex_arr[DID_DD]);
 	memcpy(*msg_np, &s_data.ddv.did, sizeof(s_data.ddv.did));
 	*msg_np += sizeof(s_data.ddv.did);
@@ -125,12 +153,27 @@ static void send_data_mem_cpy_ddv(char **msg_np)
 	memcpy(*msg_np, s_data.ddv.dd_dat, sizeof(struct dd_data) * s_data.ddv.dd_cnt);
 	*msg_np += sizeof(struct dd_data) * s_data.ddv.dd_cnt;
 	s_data.ddv.dd_cnt = 0;
+#endif
+	uint8_t cnt = s_data.smv.sdi[DID_DD].cnt;
+	uint8_t did = s_data.smv.sdi[DID_DD].did;
+
+	memcpy(*msg_np, &s_data.smv.sdi[DID_DD].did, sizeof(s_data.smv.sdi[DID_DD].did));
+	*msg_np += sizeof(s_data.smv.sdi[DID_DD].did);
+
+	memcpy(*msg_np, &s_data.smv.sdi[DID_DD].cnt, sizeof(s_data.smv.sdi[DID_DD].cnt));
+	*msg_np += sizeof(s_data.smv.sdi[DID_DD].did);
+
+	memcpy(*msg_np, s_data.smv.sd.dd, sizeof(struct dd_data) * cnt);
+	*msg_np += sizeof(struct dd_data) * cnt;
+	
+	s_data.smv.sdi[DID_DD].cnt = 0;
 	pthread_mutex_unlock(&mutex_arr[DID_DD]);
 }
 
 static void send_data_mem_cpy_rwv(char **msg_np)
 {
 	// rwv
+#if 0
 	pthread_mutex_lock(&mutex_arr[DID_RW]);
 	memcpy(*msg_np, &s_data.rwv.did, sizeof(s_data.rwv.did));
 	*msg_np += sizeof(s_data.rwv.did);
@@ -141,12 +184,27 @@ static void send_data_mem_cpy_rwv(char **msg_np)
 	memcpy(*msg_np, s_data.rwv.rw_dat, sizeof(struct rw_data) * s_data.rwv.rw_cnt);
 	*msg_np += sizeof(struct rw_data) * s_data.rwv.rw_cnt;
 	s_data.rwv.rw_cnt = 0;
+#endif
+	uint8_t cnt = s_data.smv.sdi[DID_RW].cnt;
+	uint8_t did = s_data.smv.sdi[DID_RW].did;
+
+	memcpy(*msg_np, &s_data.smv.sdi[DID_RW].did, sizeof(s_data.smv.sdi[DID_RW].did));
+	*msg_np += sizeof(s_data.smv.sdi[DID_RW].did);
+
+	memcpy(*msg_np, &s_data.smv.sdi[DID_RW].cnt, sizeof(s_data.smv.sdi[DID_RW].cnt));
+	*msg_np += sizeof(s_data.smv.sdi[DID_RW].did);
+
+	memcpy(*msg_np, s_data.smv.sd.rw, sizeof(struct rw_data) * cnt);
+	*msg_np += sizeof(struct rw_data) * cnt;
+	
+	s_data.smv.sdi[DID_RW].cnt = 0;
 	pthread_mutex_unlock(&mutex_arr[DID_RW]);
 }
 
 static void send_data_mem_cpy_drv(char **msg_np)
 {
 	// drv
+#if 0
 	pthread_mutex_lock(&mutex_arr[DID_DR]);
 	memcpy(*msg_np, &s_data.drv.did, sizeof(s_data.drv.did));
 	*msg_np += sizeof(s_data.drv.did);
@@ -157,12 +215,27 @@ static void send_data_mem_cpy_drv(char **msg_np)
 	memcpy(*msg_np, s_data.drv.dr_dat, sizeof(struct dr_data) * s_data.drv.dr_cnt);
 	*msg_np += sizeof(struct dr_data) * s_data.drv.dr_cnt;
 	s_data.drv.dr_cnt = 0;
+#endif
+	uint8_t cnt = s_data.smv.sdi[DID_DR].cnt;
+	uint8_t did = s_data.smv.sdi[DID_DR].did;
+
+	memcpy(*msg_np, &s_data.smv.sdi[DID_DR].did, sizeof(s_data.smv.sdi[DID_DR].did));
+	*msg_np += sizeof(s_data.smv.sdi[DID_DR].did);
+
+	memcpy(*msg_np, &s_data.smv.sdi[DID_DR].cnt, sizeof(s_data.smv.sdi[DID_DR].cnt));
+	*msg_np += sizeof(s_data.smv.sdi[DID_DR].did);
+
+	memcpy(*msg_np, s_data.smv.sd.dr, sizeof(struct dr_data) * cnt);
+	*msg_np += sizeof(struct dr_data) * cnt;
+	
+	s_data.smv.sdi[DID_DR].cnt = 0;
 	pthread_mutex_unlock(&mutex_arr[DID_DR]);
 }
 
 static void send_data_mem_cpy_fmv(char **msg_np)
 {
 	// fmv
+#if 0
 	pthread_mutex_lock(&mutex_arr[DID_FM]);
 	memcpy(*msg_np, &s_data.fmv.did, sizeof(s_data.fmv.did));
 	*msg_np += sizeof(s_data.fmv.did);
@@ -173,6 +246,20 @@ static void send_data_mem_cpy_fmv(char **msg_np)
 	memcpy(*msg_np, s_data.fmv.fm_dat, sizeof(struct fm_data) * s_data.fmv.fm_cnt);
 	*msg_np += sizeof(struct fm_data) * s_data.fmv.fm_cnt;
 	s_data.fmv.fm_cnt = 0;
+#endif
+	uint8_t cnt = s_data.smv.sdi[DID_FM].cnt;
+	uint8_t did = s_data.smv.sdi[DID_FM].did;
+
+	memcpy(*msg_np, &s_data.smv.sdi[DID_FM].did, sizeof(s_data.smv.sdi[DID_FM].did));
+	*msg_np += sizeof(s_data.smv.sdi[DID_FM].did);
+
+	memcpy(*msg_np, &s_data.smv.sdi[DID_FM].cnt, sizeof(s_data.smv.sdi[DID_FM].cnt));
+	*msg_np += sizeof(s_data.smv.sdi[DID_FM].did);
+
+	memcpy(*msg_np, s_data.smv.sd.fm, sizeof(struct fm_data) * cnt);
+	*msg_np += sizeof(struct fm_data) * cnt;
+	
+	s_data.smv.sdi[DID_FM].cnt = 0;
 	pthread_mutex_unlock(&mutex_arr[DID_FM]);
 }
 
@@ -206,7 +293,7 @@ void * send_msg(void *arg)
 	{
 		size = 0;
 
-		for(cnt = 0; cnt < 60; cnt++)
+		for(cnt = 0; cnt < 10; cnt++)
 		{
 			delay(1000);
 		}
@@ -268,10 +355,38 @@ void error_handling(char *msg)
 static void get_send_data_size(uint16_t *size)
 {
 	int __size = 0;
+	int i;
 	__size += 1; // op (0000 0010)
 
 	__size += 4; // s_data.uid
-	
+
+	for(i = 0; i < DID_TOTAL_CNT; i++)
+	{
+		__size += 1; // s_data.smv.sdi[i].did size;
+		__size += 1; // s_data.smv.sdi[i].cnt size;
+
+		switch(i)
+		{
+		case DID_HT:
+			__size += s_data.smv.sdi[i].cnt * sizeof(struct ht_data);
+			break;
+
+		case DID_DD:
+			__size += s_data.smv.sdi[i].cnt * sizeof(struct dd_data);
+			break;
+		case DID_RW:
+			__size += s_data.smv.sdi[i].cnt * sizeof(struct rw_data);
+			break;
+		case DID_DR:
+			__size += s_data.smv.sdi[i].cnt * sizeof(struct dr_data);
+			break;
+		case DID_FM:
+			__size += s_data.smv.sdi[i].cnt * sizeof(struct fm_data);
+			break;
+		}
+	}
+
+#if 0	
 	__size += 1; // s_data.htv.did 
 	__size += 1; // s_data.htv.ht_cnt 
 	__size += s_data.htv.ht_cnt * sizeof(struct ht_data); //s_data.htv.ht_dat[i];
@@ -293,5 +408,6 @@ static void get_send_data_size(uint16_t *size)
 	__size += 1; // s_data.fmv.did
 	__size += 1; // s_data.fmv.fm_cnt 
 	__size += s_data.fmv.fm_cnt * sizeof(struct fm_data); //s_data.fmv.fm_dat[i];
+#endif
 	*size = __size;
 }
