@@ -91,7 +91,7 @@ void * read_msg(void *arg)
 			if(read_cnt == -1)
 			{
 				close(init_info.clnt_sock);
-				continue;
+				break;
 			}
 			else if(read_cnt == 0)
 			{
@@ -179,6 +179,7 @@ static void * handle_clnt(void * arg)
 		printf("msg[%d] : %x\n", i + INIT_READ_BYTES, msg[i]);
 	}
 
+	write(info->clnt_sock, "close from server", 50);
 	free(msg);
 	close(info->clnt_sock);
 
@@ -230,6 +231,7 @@ static void * control_thread(void *arg)
 		printf("msg[%d] : %x\n", i + INIT_READ_BYTES, msg[i]);
 	}
 
+	write(info->clnt_sock, "close from server", 50);
 	free(msg);
 	close(info->clnt_sock);
 
