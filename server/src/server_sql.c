@@ -2,19 +2,31 @@
 #include "server_sql.h"
 
 static int db_ht_save(char **msg, uint32_t uid);
-static unsigned long long int time_save(char **msg, uint32_t uid);
+static int db_dd_save(char **msg, uint32_t uid);
+static int db_rw_save(char **msg, uint32_t uid);
+static int db_dr_save(char **msg, uint32_t uid);
+static int db_fm_save(char **msg, uint32_t uid);
+static ULL time_save(char **msg, uint32_t uid);
 
 static MYSQL *connector = NULL;
-static MYSQL_RES *result = NULL;
+static MYSQL_RES *result;
 static MYSQL_ROW row = NULL;
-static char query[1024];
+static char query[2048];
+static char uid_query[512];
+static char tid_query[512];
 
 int db_proc(char *msg, uint32_t uid)
 {
 	int query_ret;
 	struct sm_data_info sdi;
-	struct tm t;
 	int i,j;
+	int (*fp[])(char **, uint32_t) = {
+		db_ht_save,
+		db_dd_save,
+		db_rw_save,
+		db_dr_save,
+		db_fm_save,
+	};
 
 	//MYSQL Connection
 	connector = mysql_init(NULL);
@@ -27,22 +39,21 @@ int db_proc(char *msg, uint32_t uid)
 	
 	sprintf(query, "SELECT uid FROM swuser WHERE uid = %d", uid);
 	query_ret = mysql_query(connector, query);
-	if(query_ret)
-	{
-		puts("QUERY_FAIL");
-		return 0;
-	}
+
+	QUERY_IS_FAILED(query_ret);
 
 	result = mysql_store_result(connector);
 	row = mysql_fetch_row(result);
+#if 0
 	if(!row)
 	{
 		puts("row is NULL");
+		return 0;
 	}
-	else
-	{
-		printf("row : %s\n", row[0]);
-	}
+	printf("row : %s\n", row[0]);
+#endif
+
+	QUERY_RESULT_ROW_PROC(row);
 
 	mysql_free_result(result);
 
@@ -58,22 +69,7 @@ int db_proc(char *msg, uint32_t uid)
 
 		for(j = 0; j < sdi.cnt; j++)
 		{
-			switch(sdi.did)
-			{
-			case DID_HT:
-				db_ht_save(&msg, uid);
-				break;
-			case DID_DD:
-				break;
-			case DID_RW:
-				break;
-			case DID_DR:
-				break;
-			case DID_FM:
-				break;
-			default:
-				break;
-			}
+			fp[i](&msg, uid);
 		}
 	}
 
@@ -84,115 +80,144 @@ int db_proc(char *msg, uint32_t uid)
 
 static int db_ht_save(char **msg, uint32_t uid)
 {
-	unsigned long long int tid;
-	struct sm_data sm;
-	char q1[100];
-	char q2[100];
+	ULL tid;
+	struct ht_data ht;
+	int query_ret;
 
 	puts("db_ht_save start...");
 
-	sm.ht.h_int = *(uint8_t*)(*msg);
-	printf("sm.ht.h_int : %d\n", sm.ht.h_int);
+	ht.h_int = *(uint8_t*)(*msg);
 	*msg += sizeof(uint8_t);
 
-	sm.ht.h_flt = *(uint8_t*)(*msg);
-	printf("sm.ht.h_flt : %d\n", sm.ht.h_flt);
+	ht.h_flt = *(uint8_t*)(*msg);
 	*msg += sizeof(uint8_t);
 
-	sm.ht.t_int = *(uint8_t*)(*msg);
-	printf("sm.ht.t_int : %d\n", sm.ht.t_int);
+	ht.t_int = *(uint8_t*)(*msg);
 	*msg += sizeof(uint8_t);
 
-	sm.ht.t_flt = *(uint8_t*)(*msg);
-	printf("sm.ht.t_flt : %d\n", sm.ht.t_flt);
+	ht.t_flt = *(uint8_t*)(*msg);
 	*msg += sizeof(uint8_t);
 
 	tid = time_save(msg, uid);
-	printf("tid : %lld\n", tid);
 
-	sprintf(q1, "select uid from swuser where uid = %d", uid);
-	sprintf(q2, "select tid from time   where tid = %lld", tid);
+	QUERY_UID_TID_GENERATE(uid,tid);
 
 	sprintf(query, "INSERT INTO dht(humidity_int, humidity_flt, temperature_int, temperature_flt, uid, tid) " 
 		 	"VALUES ( %d, %d, %d, %d, (%s), (%s) )", 
-			sm.ht.h_int,
-			sm.ht.h_flt,
-			sm.ht.t_int,
-			sm.ht.t_flt,
-			q1,
-			q2
+			ht.h_int,
+			ht.h_flt,
+			ht.t_int,
+			ht.t_flt,
+			uid_query,
+			tid_query
 	);
-	printf("%s\n", query);
 
-	puts("db_ht_save middle...");
-	if(mysql_query(connector, query))
-	{
-		puts("QUERY_FAIL");
-		return QUERY_FAIL;
-	}
+	query_ret = mysql_query(connector, query);
 
+	QUERY_IS_FAILED(query_ret);
 	puts("db_ht_save end...");
 
 	return QUERY_SUCCESS;
 }
 
-static void db_dd_save()
+static int db_dd_save(char **msg, uint32_t uid)
 {
+	return QUERY_SUCCESS;
 }
 
-static void db_rw_save()
+static int db_rw_save(char **msg, uint32_t uid)
 {
+	return QUERY_SUCCESS;
 }
 
-static void db_dr_save()
+static int db_dr_save(char **msg, uint32_t uid)
 {
+	ULL tid;
+	struct dr_data dr;
+	int query_ret;
+
+	puts("db_dr_save start...");
+
+	dr.open = *(uint8_t*)(*msg);
+	*msg += sizeof(uint8_t);
+
+	tid = time_save(msg, uid);
+
+	QUERY_UID_TID_GENERATE(uid,tid);
+
+	sprintf(query, "INSERT INTO dr(isopen, uid, tid) " 
+		 	"VALUES ( %d, (%s), (%s) )", 
+			dr.open,
+			uid_query,
+			tid_query
+	);
+	query_ret = mysql_query(connector, query);
+
+	QUERY_IS_FAILED(query_ret);
+	puts("db_dr_save end...");
+
+	return QUERY_SUCCESS;
 }
 
-static void db_fm_save()
+static int db_fm_save(char **msg, uint32_t uid)
 {
+	ULL tid;
+	struct fm_data fm;
+	int query_ret;
+
+	puts("db_fm_save start...");
+
+	fm.speed = ntohs(*(uint16_t*)*msg);
+	*msg += sizeof(uint16_t);
+
+	tid = time_save(msg, uid);
+
+	QUERY_UID_TID_GENERATE(uid,tid);
+
+	sprintf(query, "INSERT INTO fm(speed, uid, tid) " 
+		 	"VALUES ( %d, (%s), (%s) )", 
+			fm.speed,
+			uid_query,
+			tid_query
+	);
+	query_ret = mysql_query(connector, query);
+
+	QUERY_IS_FAILED(query_ret);
+	puts("db_fm_save end...");
+	return QUERY_SUCCESS;
 }
 
-static unsigned long long int time_save(char **msg, uint32_t uid)
+static ULL time_save(char **msg, uint32_t uid)
 {
+	int query_ret;
 	struct td t;
-	result = row = NULL;
+	row = NULL;
 
 	puts("time_save start...");
 
 	t.year = ntohs(*(uint16_t*)*msg);
 	*msg += sizeof(uint16_t);
-	printf("t.year : %d\n", t.year);
 
 	t.mon = *(uint8_t*)*msg;
 	*msg += sizeof(uint8_t);
-	printf("t.mon : %d\n", t.mon);
 
 	t.day = *(uint8_t*)*msg;
 	*msg += sizeof(uint8_t);
-	printf("t.day : %d\n", t.day);
 
 	t.hour = *(uint8_t*)*msg;
 	*msg += sizeof(uint8_t);
-	printf("t.hour : %d\n", t.hour);
 
 	t.min = *(uint8_t*)*msg;
 	*msg += sizeof(uint8_t);
-	printf("t.min : %d\n", t.min);
 
 	t.sec = *(uint8_t*)*msg;
 	*msg += sizeof(uint8_t);
-	printf("t.sec : %d\n", t.sec);
 
 	sprintf(query, "INSERT INTO time(year, month, day, hour, min, sec) VALUES ( %d, %d, %d, %d, %d, %d )", 
 			t.year, t.mon, t.day, t.hour, t.min, t.sec);
 
-	if(mysql_query(connector, query))
-	{
-		puts("QUERY_FAIL");
-		return QUERY_FAIL;
-	}
-
-	puts("time_save middle1...");
+	query_ret = mysql_query(connector, query);
+	QUERY_IS_FAILED(query_ret);
 
 	sprintf(query, "SELECT tid from time ORDER BY tid DESC LIMIT 1");
 	if(mysql_query(connector, query))
@@ -201,10 +226,9 @@ static unsigned long long int time_save(char **msg, uint32_t uid)
 		return QUERY_FAIL;
 	}
 
-	puts("time_save middle2...");
 	result = mysql_store_result(connector);
 	row = mysql_fetch_row(result);
-
+#if 0
 	if(!row)
 	{
 		puts("row is NULL");
@@ -213,13 +237,13 @@ static unsigned long long int time_save(char **msg, uint32_t uid)
 	{
 		printf("row : %s\n", row[0]);
 	}
+#endif
+	QUERY_RESULT_ROW_PROC(row);
+
 	mysql_free_result(result);
 
 	puts("time_save end...");
 
 	return (unsigned long long)(atoi(row[0]));
-#if 0
-	return row;
-#endif
 }
 
