@@ -10,6 +10,11 @@
 extern struct smart_window_send_data	s_data;
 extern pthread_mutex_t			mutex_arr[DID_TOTAL_CNT];	
 
+static void get_send_data_size(uint16_t *size);
+static void send_data_mem_cpy(char **msg_np, uint16_t *size);
+static void send_data_mem_cpy_prv(char **msg_np, uint16_t *size);
+static void send_data_mem_cpy_all(char **msg_np);
+
 static struct tm* current_time(void);
 static int data_store(did_t did, void *arg);
 static int time_store(struct td *tdp);
@@ -22,29 +27,13 @@ static int fm_dat_proc(void *arg);
 static int ht_dat_proc(void *arg)
 {
 	pthread_mutex_lock(&mutex_arr[DID_HT]);
-#if 0
-	uint8_t *ht_cnt = &s_data.htv.ht_cnt;
-#endif
 	uint8_t *ht_cnt = &s_data.smv.sdi[DID_HT].cnt;
-#if 0
-	struct ht_data *htdp = &s_data.htv.ht_dat[*ht_cnt];
-#endif
 	struct ht_data *htdp = &s_data.smv.sd.ht[*ht_cnt];
 
 	htdp->h_int = ((int *)arg)[0];
 	htdp->h_flt = ((int *)arg)[1];
 	htdp->t_int = ((int *)arg)[2];
 	htdp->t_flt = ((int *)arg)[3];
-
-#if 0
-	s_tm = current_time();
-	htdp->t.year = s_tm->tm_year;
-	htdp->t.mon  = s_tm->tm_mon;
-	htdp->t.day  = s_tm->tm_mday;
-	htdp->t.hour = s_tm->tm_hour;
-	htdp->t.min  = s_tm->tm_min;
-	htdp->t.sec  = s_tm->tm_sec;
-#endif
 
 	time_store(&htdp->t);
 	(*ht_cnt)++;
@@ -66,27 +55,10 @@ static int rw_dat_proc(void *arg)
 static int dr_dat_proc(void *arg)
 {
 	pthread_mutex_lock(&mutex_arr[DID_DR]);
-#if 0
-	uint8_t *dr_cnt = &s_data.drv.dr_cnt;
-#endif
 	uint8_t *dr_cnt = &s_data.smv.sdi[DID_DR].cnt;
-#if 0
-	struct dr_data *drdp = &s_data.drv.dr_dat[*dr_cnt];
-#endif
 	struct dr_data *drdp = &s_data.smv.sd.dr[*dr_cnt];
 
 	drdp->open = *(int *)arg;
-
-#if 0
-	s_tm = current_time();
-
-	drdp->t.year = s_tm->tm_year;
-	drdp->t.mon  = s_tm->tm_mon;
-	drdp->t.day  = s_tm->tm_mday;
-	drdp->t.hour = s_tm->tm_hour;
-	drdp->t.min  = s_tm->tm_min;
-	drdp->t.sec  = s_tm->tm_sec;
-#endif
 
 	time_store(&drdp->t);
 	(*dr_cnt)++;
@@ -98,25 +70,11 @@ static int dr_dat_proc(void *arg)
 static int fm_dat_proc(void *arg)
 {
 	pthread_mutex_lock(&mutex_arr[DID_FM]);
-#if 0
-	uint8_t *fm_cnt = &s_data.fmv.fm_cnt;
-#endif
 	uint8_t *fm_cnt = &s_data.smv.sdi[DID_FM].cnt;
 
 	struct fm_data *fmdp = &s_data.smv.sd.fm[*fm_cnt];
 
 	fmdp->speed = *(uint16_t *)arg;
-
-#if 0
-	s_tm = current_time();
-
-	fmdp->t.year = s_tm->tm_year;
-	fmdp->t.mon  = s_tm->tm_mon;
-	fmdp->t.day  = s_tm->tm_mday;
-	fmdp->t.hour = s_tm->tm_hour;
-	fmdp->t.min  = s_tm->tm_min;
-	fmdp->t.sec  = s_tm->tm_sec;
-#endif
 
 	time_store(&fmdp->t);
 	(*fm_cnt)++;
@@ -299,4 +257,188 @@ static struct tm* current_time(void)
 	s_tm.tm_mon  += 1;
 
 	return &s_tm;
+}
+
+static void send_data_mem_cpy_prv(char **msg_np, uint16_t *size)
+{
+	uint8_t op = 0b0010;
+	uint16_t __size = *size;
+	uint32_t __uid = s_data.uid;
+
+	// op
+	memcpy(*msg_np, &op, sizeof(op));
+	*msg_np += sizeof(op);
+
+	// total data size
+	__size = htons(__size);
+	memcpy(*msg_np, &__size, sizeof(*size));
+	*msg_np += sizeof(*size);
+
+	// uid
+	__uid = htonl(s_data.uid);
+	memcpy(*msg_np, &__uid, sizeof(s_data.uid));
+	*msg_np += sizeof(s_data.uid);
+}
+
+static void send_data_mem_cpy_all(char **msg_np)
+{
+	struct sm       *smp = &s_data.smv;
+	struct sm_data  *sdp = &smp->sd;
+	int i;
+	uint8_t did, cnt;
+
+	for(i = 0; i < DID_TOTAL_CNT; i++)
+	{
+		pthread_mutex_lock(&mutex_arr[i]);
+		did = smp->sdi[i].did;
+		memcpy(*msg_np, &did, sizeof(did));
+		*msg_np += sizeof(did);
+
+		cnt = smp->sdi[i].cnt;
+		memcpy(*msg_np, &cnt, sizeof(cnt));
+		*msg_np += sizeof(cnt);
+
+		switch(i)
+		{
+		case DID_HT:
+			memcpy(*msg_np, sdp->ht, sizeof(struct ht_data) * cnt);
+			*msg_np += sizeof(struct ht_data) * cnt;
+			break;
+		case DID_DD:
+			memcpy(*msg_np, sdp->dd, sizeof(struct dd_data) * cnt);
+			*msg_np += sizeof(struct dd_data) * cnt;
+			break;
+		case DID_RW:
+			memcpy(*msg_np, sdp->rw, sizeof(struct rw_data) * cnt);
+			*msg_np += sizeof(struct rw_data) * cnt;
+			break;
+		case DID_DR:
+			memcpy(*msg_np, sdp->dr, sizeof(struct dr_data) * cnt);
+			*msg_np += sizeof(struct dr_data) * cnt;
+			break;
+		case DID_FM:
+			memcpy(*msg_np, sdp->fm, sizeof(struct fm_data) * cnt);
+			*msg_np += sizeof(struct fm_data) * cnt;
+			break;
+		default:
+			break;
+		}
+		smp->sdi[i].cnt = 0;
+		pthread_mutex_unlock(&mutex_arr[i]);
+	}
+}
+
+static void send_data_mem_cpy(char **msg_np, uint16_t *size)
+{
+	send_data_mem_cpy_prv(msg_np, size);
+	send_data_mem_cpy_all(msg_np);
+}
+
+void * send_msg(void *arg)
+{
+	int sock;
+	struct sockaddr_in serv_addr;
+	int cnt = 0;
+	uint16_t size = 0;
+	char *msg = NULL;
+	char *msg_n = NULL;
+	int read_len;
+
+	memset(&serv_addr, 0, sizeof(serv_addr));
+	serv_addr.sin_family            = AF_INET;
+	serv_addr.sin_addr.s_addr       = inet_addr(SERVER_IP);
+	serv_addr.sin_port              = htons(atoi(SERVER_PORT));
+
+	while(1)
+	{
+		size = 0;
+		sock = socket(PF_INET, SOCK_STREAM, 0);
+
+		if(connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
+			error_handling("connect() error");
+
+		for(cnt = 0; cnt < 10; cnt++)
+		{
+			delay(1000);
+		}
+
+		get_send_data_size(&size);
+		printf("total size : %d\n", size);
+
+		msg_n = msg = (char *)malloc(size);
+		if(msg == NULL)
+		{
+			printf("malloc failed\n");
+			return NULL;
+		}
+
+		memset(msg, 0, size);
+
+		send_data_mem_cpy(&msg_n, &size);
+
+		for(int i = 0; i < size; i++)
+		{
+			printf("msg[%d] : %x\n", i, msg[i]);
+		}
+
+		write(sock , msg, size);
+		shutdown(sock, SHUT_WR);
+		read_len = read(sock, msg, size);
+		printf("read_len : %d\n", read_len);
+		printf("read_len : %s\n", msg);
+
+		free(msg);
+		close(sock);
+	}
+
+	return NULL;
+}
+
+void * recv_msg(void *arg)
+{
+	return NULL;
+}
+
+static void get_send_data_size(uint16_t *size)
+{
+	int __size = 0;
+	int i;
+	__size += 1; // op (0000 0010)
+
+	__size += 4; // s_data.uid
+
+	for(i = 0; i < DID_TOTAL_CNT; i++)
+	{
+		__size += 1; // s_data.smv.sdi[i].did size;
+		__size += 1; // s_data.smv.sdi[i].cnt size;
+
+		switch(i)
+		{
+		case DID_HT:
+			__size += s_data.smv.sdi[i].cnt * sizeof(struct ht_data);
+			break;
+
+		case DID_DD:
+			__size += s_data.smv.sdi[i].cnt * sizeof(struct dd_data);
+			break;
+		case DID_RW:
+			__size += s_data.smv.sdi[i].cnt * sizeof(struct rw_data);
+			break;
+		case DID_DR:
+			__size += s_data.smv.sdi[i].cnt * sizeof(struct dr_data);
+			break;
+		case DID_FM:
+			__size += s_data.smv.sdi[i].cnt * sizeof(struct fm_data);
+			break;
+		}
+	}
+
+	*size = __size;
+}
+
+void error_handling(char *msg)
+{
+	fputs(msg, stderr);
+	fputc('\n', stderr);
+	exit(1);
 }
