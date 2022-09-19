@@ -74,7 +74,7 @@ static int fm_dat_proc(void *arg)
 
 	struct fm_data *fmdp = &s_data.smv.sd.fm[*fm_cnt];
 
-	fmdp->speed = *(uint16_t *)arg;
+	fmdp->speed = htons(*(uint16_t *)arg);
 
 	time_store(&fmdp->t);
 	(*fm_cnt)++;
@@ -404,7 +404,7 @@ static void get_send_data_size(uint16_t *size)
 	int __size = 0;
 	int i;
 	__size += 1; // op (0000 0010)
-
+	__size += 2; // total bytes
 	__size += 4; // s_data.uid
 
 	for(i = 0; i < DID_TOTAL_CNT; i++)

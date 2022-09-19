@@ -73,7 +73,7 @@ struct dr_data
  ********************************/
 struct fm_data
 {
-	uint16_t	speed; 		// current speed 
+	uint16_t	speed; 		// current speed, store as big endian
 	struct td 	t;
 };
 

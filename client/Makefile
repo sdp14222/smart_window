@@ -10,12 +10,13 @@ CC = gcc
 CFLAGS = -Wall -O2 -lwiringPi -D_REENTRANT -lpthread -D__CLIENT_DEFINED__
 
 # Linker Options
-LDFLAGS =
+LDFLAGS = -L/usr/local/lib
 
 # Header File Path
 COMMON_INC = $(shell pwd)/../inc/
 INCLUDE += -Iinc/
 INCLUDE += -I$(COMMON_INC)
+INCLUDE += -I/usr/local/include
 
 # Source File Path 
 SRC_DIR = ./src
@@ -39,7 +40,7 @@ OBJS += $(SRC_DIR)/client_thread.o
 all: TARGET 
 
 TARGET: $(OBJS)
-	$(CC) $(CFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(INCLUDE) $^ -o $(OUT_DIR)/$(TARGET)
 
 clean:
 	rm -f $(OUT_DIR)/$(TARGET)
