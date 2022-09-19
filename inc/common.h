@@ -41,18 +41,6 @@ struct ht_data
 	struct td 	t; 	// time
 };
 
-#if 0
-/********************************
- * humidity & temperature all data 
- ********************************/
-struct ht
-{
-	uint8_t		did;		// did_t data id
-	uint8_t		ht_cnt; 	// ht_data count
-	struct ht_data	ht_dat[DATA_MAX_CNT];
-};
-#endif
-
 /********************************
  * dust data
  ********************************/
@@ -61,18 +49,6 @@ struct dd_data
 	unsigned int	data; // Not yet
 	struct td 	t;
 };
-
-#if 0
-/********************************
- * dust all data
- ********************************/
-struct dd
-{
-	uint8_t		did;		// did_t data id
-	uint8_t		dd_cnt;
-	struct dd_data 	dd_dat[DATA_MAX_CNT];
-};
-#endif
 
 /********************************
  * rain water data
@@ -83,18 +59,6 @@ struct rw_data
 	struct td 	t;
 };
 
-#if 0
-/********************************
- * rain water all data
- ********************************/
-struct rw
-{
-	uint8_t		did;		// did_t data id
-	uint8_t		rw_cnt; 
-	struct rw_data 	rw_dat[DATA_MAX_CNT];
-};
-#endif
-
 /********************************
  * door data
  ********************************/
@@ -104,18 +68,6 @@ struct dr_data
 	struct td 	t;
 };
 
-#if 0
-/********************************
- * door all data
- ********************************/
-struct dr 
-{
-	uint8_t		did;		// did_t data id
-	uint8_t		dr_cnt;
-	struct dr_data 	dr_dat[DATA_MAX_CNT];
-};
-#endif
-
 /********************************
  * fan motor data
  ********************************/
@@ -124,18 +76,6 @@ struct fm_data
 	uint16_t	speed; 		// current speed 
 	struct td 	t;
 };
-
-#if 0
-/********************************
- * fan motor all data
- ********************************/
-struct fm 
-{
-	uint8_t		did;		// did_t data id
-	uint8_t		fm_cnt;
-	struct fm_data	fm_dat[DATA_MAX_CNT];
-};
-#endif
 
 struct sm_data
 {
@@ -164,13 +104,6 @@ struct sm
 struct smart_window_send_data
 {
 	uint32_t 	uid;
-#if 0
-	struct ht 	htv;
-	struct dd 	ddv;
-	struct rw 	rwv;
-	struct dr 	drv;
-	struct fm 	fmv;
-#endif
 	struct sm	smv;
 };
 #pragma pack(pop)

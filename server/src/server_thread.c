@@ -242,7 +242,7 @@ static void * control_thread(void *arg)
 	puts("control_thread msgs...");
 	for(i = 0; i < msg_size; i++)
 	{
-		printf("msg[%d] : %x\n", i + INIT_READ_BYTES, msg[i]);
+		printf("control msg[%d] : %x\n", i + INIT_READ_BYTES, msg[i]);
 	}
 
 	write(info->clnt_sock, "close from server", 50);
