@@ -1,17 +1,15 @@
 /**************************************************
  * Created  : 2022.09.15
- * Modified : 2022.09.18
+ * Modified : 2022.09.19
  * Author   : SangDon Park
  **************************************************/
 #include "server.h"
-
-static void error_handling(char * msg);
 
 int main(int argc, char *argv[])
 {
 	int serv_sock;
 	struct sockaddr_in serv_adr;
-	pthread_t read_thr;
+	pthread_t client_accept_thr;
 
 	serv_sock = socket(PF_INET, SOCK_STREAM, 0);
 
@@ -28,18 +26,11 @@ int main(int argc, char *argv[])
 	if(listen(serv_sock, 5)==-1)
 		error_handling("listen() error");
 
-	pthread_create(&read_thr, NULL, read_msg, (void*)&serv_sock);
+	pthread_create(&client_accept_thr, NULL, client_accept, (void*)&serv_sock);
 
-	pthread_join(read_thr, NULL);
+	pthread_join(client_accept_thr, NULL);
 	
 	close(serv_sock);
 
 	return 0;
-}
-	
-static void error_handling(char * msg)
-{
-	fputs(msg, stderr);
-	fputc('\n', stderr);
-	exit(1);
 }

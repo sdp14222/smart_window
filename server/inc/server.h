@@ -24,7 +24,8 @@ struct init_msg_info
 	uint32_t		uid;
 };
 
-void * read_msg(void *arg);
+void * client_accept(void *arg);
 void * send_msg(void *arg);
+void error_handling(char *msg);
 
 #endif

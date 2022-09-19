@@ -1,13 +1,14 @@
 /**************************************************
  * Created  : 2022.09.18
- * Modified : 2022.09.18
+ * Modified : 2022.09.19
  * Author   : SangDon Park
  **************************************************/
 #include "server.h"
 static int rptos(struct init_msg_info *info);
 static int mtos(struct init_msg_info *info);
-static void * handle_clnt(void *arg);
+static void * dfrp(void *arg);
 static void * control_thread(void *arg);
+static void * read_msg(void *arg);
 
 static int rptos(struct init_msg_info *info)
 {
@@ -28,7 +29,7 @@ static int rptos(struct init_msg_info *info)
 	case 2:
 		// 10 : data from raspberry pi
 		puts("data from raspberry pi...");
-		pthread_create(&t_id, NULL, handle_clnt, (void*)info);
+		pthread_create(&t_id, NULL, dfrp, (void*)info);
 		pthread_detach(t_id);
 		return 1;
 	default:
@@ -67,80 +68,93 @@ static int mtos(struct init_msg_info *info)
 
 void * read_msg(void *arg)
 {
+	struct init_msg_info *init_info = (struct init_msg_info*)arg;
+ 	int read_cnt = 0, cnt = 0;
+	memset(init_info->init_msg, 0, INIT_READ_BYTES);
+
+	printf("Connected client IP  : %s \n", inet_ntoa(init_info->clnt_adr.sin_addr));
+	printf("Connected client Port: %d \n", ntohs(init_info->clnt_adr.sin_port));
+
+	while(read_cnt < INIT_READ_BYTES)
+	{
+		read_cnt = read(init_info->clnt_sock, init_info->init_msg, INIT_READ_BYTES);
+		printf("read_cnt : %d\n", read_cnt);
+		cnt += read_cnt;
+		printf("cnt : %d\n", cnt);
+		if(read_cnt == -1)
+		{
+			close(init_info->clnt_sock);
+			break;
+		}
+		else if(read_cnt == 0)
+		{
+			puts("while read 0...");
+			close(init_info->clnt_sock);
+			break;
+		}
+	}
+
+	for(int i = 0; i < read_cnt; i++)
+	{
+		printf("%x\n", init_info->init_msg[i]);
+	}
+
+	init_info->cmd = *(uint8_t*)(init_info->init_msg);
+	printf("cmd : %d\n", init_info->cmd);
+	init_info->total_size = ntohs(*(uint16_t*)(init_info->init_msg + 1));
+	printf("total_size : %d\n", init_info->total_size);
+	init_info->uid = ntohl(*(uint32_t*)(init_info->init_msg + 3));
+	printf("uid : %d\n", init_info->uid);
+
+	// 0000 0xxx
+	// 0000 0100
+	switch((init_info->cmd >> 2) & (uint8_t)0x1)
+	{
+	case 0:
+		// raspberry pi to server
+		puts("r.pi to server...");
+		if(!rptos(init_info))
+		{
+			puts("rptos failed...");
+		}
+		break;
+	case 1:
+	// mobile to server
+		puts("mobile to server...");
+		if(!mtos(init_info))
+		{
+			puts("mtos failed...");
+		}
+		break;
+	default:
+		printf("init_info->cmd ^ (uint8_t)0x4 : %d\n", init_info->cmd ^ (uint8_t)0x4);
+		puts("abnormal connection...");
+	}
+	puts("client close...");
+
+	return NULL;
+}
+
+void * client_accept(void *arg)
+{
 	int serv_sock = *(int*)arg;
-	struct init_msg_info init_info;
- 	int read_cnt, cnt;
- 	unsigned int clnt_adr_sz = sizeof(init_info.clnt_adr);
+	pthread_t read_msg_thr;
 
 	while(1)
  	{
+		struct init_msg_info init_info;
+		unsigned int clnt_adr_sz = sizeof(init_info.clnt_adr);
+
 		puts("client wait...");
 		init_info.clnt_sock = accept(serv_sock, (struct sockaddr*)&init_info.clnt_adr, &clnt_adr_sz);
-		cnt = read_cnt = 0;
-		memset(init_info.init_msg, 0, INIT_READ_BYTES);
-
-		printf("Connected client IP  : %s \n", inet_ntoa(init_info.clnt_adr.sin_addr));
-		printf("Connected client Port: %d \n", ntohs(init_info.clnt_adr.sin_port));
-
-		while(read_cnt < INIT_READ_BYTES)
-		{
-			read_cnt = read(init_info.clnt_sock, init_info.init_msg, INIT_READ_BYTES);
-			printf("read_cnt : %d\n", read_cnt);
-			cnt += read_cnt;
-			printf("cnt : %d\n", cnt);
-			if(read_cnt == -1)
-			{
-				close(init_info.clnt_sock);
-				break;
-			}
-			else if(read_cnt == 0)
-			{
-				puts("while read 0...");
-				close(init_info.clnt_sock);
-				break;
-			}
-		}
-		for(int i = 0; i < read_cnt; i++)
-		{
-			printf("%x\n", init_info.init_msg[i]);
-		}
-
-		init_info.cmd = *(uint8_t*)(init_info.init_msg);
-		printf("cmd : %d\n", init_info.cmd);
-		init_info.total_size = ntohs(*(uint16_t*)(init_info.init_msg + 1));
-		printf("total_size : %d\n", init_info.total_size);
-		init_info.uid = ntohl(*(uint32_t*)(init_info.init_msg + 3));
-		printf("uid : %d\n", init_info.uid);
-
-		// 0000 0xxx
-		// 0000 0100
-		switch((init_info.cmd >> 2) & (uint8_t)0x1)
-		{
-		case 0:
-			// raspberry pi to server
-			puts("r.pi to server...");
-			if(!rptos(&init_info))
-			{
-				puts("rptos failed...");
-			}
-			break;
-		case 1:
-		// mobile to server
-			puts("mobile to server...");
-			if(!mtos(&init_info))
-			{
-				puts("mtos failed...");
-			}
-			break;
-		default:
-			printf("init_info.cmd ^ (uint8_t)0x4 : %d\n", init_info.cmd ^ (uint8_t)0x4);
-			puts("abnormal connection...");
-		}
-		puts("client close...");
+		pthread_create(&read_msg_thr, NULL, read_msg, (void*)&init_info);
+		pthread_detach(read_msg_thr);
 	}
+
+	return NULL;
 }
 
-static void * handle_clnt(void * arg)
+static void * dfrp(void * arg)
 {
 	struct init_msg_info *info = (struct init_msg_info*)arg;
 	int msg_len, msg_len_sum= 0;
@@ -151,7 +165,7 @@ static void * handle_clnt(void * arg)
 	msg = (char*)malloc(msg_size);
 	if(msg == NULL)
 	{
-		puts("handle_clnt malloc failed...");
+		puts("dfrp malloc failed...");
 		return NULL;
 
 	}
@@ -238,3 +252,9 @@ static void * control_thread(void *arg)
 	return NULL;
 }
 
+void error_handling(char * msg)
+{
+	fputs(msg, stderr);
+	fputc('\n', stderr);
+	exit(1);
+}

@@ -1,6 +1,6 @@
 /**********************************************************
  * Created  : 2022.09.13 
- * Modified : 2022.09.18
+ * Modified : 2022.09.19
  * Author   : SangDon Park
  * 
  * Desc     : Client.c threads & functions
