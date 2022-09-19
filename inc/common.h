@@ -79,11 +79,19 @@ struct fm_data
 
 struct sm_data
 {
+#if defined __CLIENT_DEFINED__
 	struct ht_data ht[DATA_MAX_CNT];
 	struct dd_data dd[DATA_MAX_CNT];
 	struct rw_data rw[DATA_MAX_CNT];
 	struct dr_data dr[DATA_MAX_CNT];
 	struct fm_data fm[DATA_MAX_CNT];
+#elif defined __SERVER_DEFINED__
+	struct ht_data ht;
+	struct dd_data dd;
+	struct rw_data rw;
+	struct dr_data dr;
+	struct fm_data fm;
+#endif
 };
 
 struct sm_data_info

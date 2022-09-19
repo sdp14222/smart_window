@@ -1,13 +1,13 @@
 # ===========================================
 # Created	: 2022.08.31
-# Last Modified	: 2022.09.17
+# Last Modified	: 2022.09.19
 # Author	: SangDon Park
 # ===========================================
 
 CC = gcc
 
 # Compiler Options
-CFLAGS = -Wall -O2 -lwiringPi -D_REENTRANT -lpthread
+CFLAGS = -Wall -O2 -lwiringPi -D_REENTRANT -lpthread -D__CLIENT_DEFINED__
 
 # Linker Options
 LDFLAGS =
