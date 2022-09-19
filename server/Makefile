@@ -1,21 +1,26 @@
 # ===========================================
 # Created       : 2022.09.15
-# Last Modified : 2022.09.17
+# Last Modified : 2022.09.19
 # Author        : SangDon Park
 # ===========================================
 
 CC = gcc
 
 # Compiler Options
-CFLAGS = -Wall -O2 -D_REENTRANT -lpthread
+CFLAGS = -Wall -O2 -D_REENTRANT -lpthread 
+CFLAGS += -D__SERVER_DEFINED__ 
+#CFLSGS += -lmysqlclient
+CFLAGS += -lmariadb
 
 # Linker Options
 LDFLAGS =
 
 # Header File Path
+MYSQL_INC = /usr/include/mariadb #mysqlconfig --cflags --libs
 COMMON_INC = $(shell pwd)/../inc/
 INCLUDE = -Iinc/
 INCLUDE += -I$(COMMON_INC)
+INCLUDE += -I$(MYSQL_INC)
 
 # Source File Path
 SRC_DIR = ./src
@@ -30,6 +35,7 @@ $(SRC_DIR)/%.o: $(SRC_DIR)/%.c
 
 OBJS += $(SRC_DIR)/server.o
 OBJS += $(SRC_DIR)/server_thread.o
+OBJS += $(SRC_DIR)/server_sql.o
 
 all: TARGET
 

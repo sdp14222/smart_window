@@ -4,6 +4,8 @@
  * Author   : SangDon Park
  **************************************************/
 #include "server.h"
+#include "server_sql.h"
+
 static int rptos(struct init_msg_info *info);
 static int mtos(struct init_msg_info *info);
 static void * dfrp(void *arg);
@@ -192,6 +194,16 @@ static void * dfrp(void * arg)
 	{
 		printf("msg[%d] : %x\n", i + INIT_READ_BYTES, msg[i]);
 	}
+	
+	if(!db_proc(msg, info->uid))
+	{
+		puts("db save failed...");
+	}
+	else
+	{
+		puts("db save success...");
+	}
+			
 
 	write(info->clnt_sock, "close from server", 50);
 	free(msg);
