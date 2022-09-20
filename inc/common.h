@@ -3,6 +3,7 @@
 
 #define SERVER_IP	"172.30.1.46"
 #define SERVER_PORT	"39202"
+#define SERVER_PORT2	"48990"
 #define DATA_MAX_CNT	70
 
 typedef enum did

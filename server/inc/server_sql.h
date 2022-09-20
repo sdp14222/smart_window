@@ -47,6 +47,8 @@ typedef unsigned long long int ULL;
 	printf("row : %s\n", row[0]);		\
 } while(0);
 
-int db_proc(char *msg, uint32_t uid);
+int db_save_proc(char *msg, uint32_t uid);
+int db_get_ip_port(uint32_t uid, char ip_port[2][20]);
+int db_update_ip_port(uint32_t uid, char ip_port[2][20]);
 
 #endif

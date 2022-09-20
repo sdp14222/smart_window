@@ -15,7 +15,22 @@ static char query[2048];
 static char uid_query[512];
 static char tid_query[512];
 
-int db_proc(char *msg, uint32_t uid)
+static int db_init(void);
+
+static int db_init(void)
+{
+	//MYSQL Connection
+	connector = mysql_init(NULL);
+	if (!mysql_real_connect(connector, DBHOST, DBUSER, DBPASS, DBNAME, 3306, NULL, 0))
+	{
+		fprintf(stderr, "%s\n", mysql_error(connector));
+		return 0;
+	}
+	puts("MariaDB connected.\n");
+	return 1;
+}
+
+int db_save_proc(char *msg, uint32_t uid)
 {
 	int query_ret;
 	struct sm_data_info sdi;
@@ -28,14 +43,11 @@ int db_proc(char *msg, uint32_t uid)
 		db_fm_save,
 	};
 
-	//MYSQL Connection
-	connector = mysql_init(NULL);
-	if (!mysql_real_connect(connector, DBHOST, DBUSER, DBPASS, DBNAME, 3306, NULL, 0))
+	if(!db_init())
 	{
-		fprintf(stderr, "%s\n", mysql_error(connector));
+		puts("db_init() error");
 		return 0;
 	}
-	puts("MariaDB connected.\n");
 	
 	sprintf(query, "SELECT uid FROM swuser WHERE uid = %d", uid);
 	query_ret = mysql_query(connector, query);
@@ -44,15 +56,6 @@ int db_proc(char *msg, uint32_t uid)
 
 	result = mysql_store_result(connector);
 	row = mysql_fetch_row(result);
-#if 0
-	if(!row)
-	{
-		puts("row is NULL");
-		return 0;
-	}
-	printf("row : %s\n", row[0]);
-#endif
-
 	QUERY_RESULT_ROW_PROC(row);
 
 	mysql_free_result(result);
@@ -228,16 +231,6 @@ static ULL time_save(char **msg, uint32_t uid)
 
 	result = mysql_store_result(connector);
 	row = mysql_fetch_row(result);
-#if 0
-	if(!row)
-	{
-		puts("row is NULL");
-	}
-	else
-	{
-		printf("row : %s\n", row[0]);
-	}
-#endif
 	QUERY_RESULT_ROW_PROC(row);
 
 	mysql_free_result(result);
@@ -247,3 +240,57 @@ static ULL time_save(char **msg, uint32_t uid)
 	return (unsigned long long)(atoi(row[0]));
 }
 
+int db_get_ip_port(uint32_t uid, char ip_port[2][20])
+{
+	int query_ret;
+
+	if(!db_init())
+	{
+		puts("db_init() error");
+		return 0;
+	}
+
+	sprintf(query, "SELECT uid,ip,port FROM swuser WHERE uid = %d", uid);
+	query_ret = mysql_query(connector, query);
+
+	QUERY_IS_FAILED(query_ret);
+
+	result = mysql_store_result(connector);
+	while((row = mysql_fetch_row(result)) != NULL)
+	{
+		printf("row[0] : %s\n", row[0]);
+		printf("row[1] : %s\n", row[1]);
+		printf("row[2] : %s\n", row[2]);
+		strcpy(ip_port[0], row[1]);
+		printf("strcpy ip_port[0] : %s\n", ip_port[0]);
+		strcpy(ip_port[1], row[2]);
+		printf("strcpy ip_port[1] : %s\n", ip_port[1]);
+	}
+
+	mysql_free_result(result);
+
+	mysql_close(connector);
+
+	return 1;
+}
+
+int db_update_ip_port(uint32_t uid, char ip_port[2][20])
+{
+	int query_ret;
+
+	if(!db_init())
+	{
+		puts("db_init() error");
+		return 0;
+	}
+
+	sprintf(query, "UPDATE swuser SET ip=\"%s\", port=\"%s\" where uid=%d", 
+			ip_port[0], ip_port[1], uid);
+	query_ret = mysql_query(connector, query);
+
+	QUERY_IS_FAILED(query_ret);
+
+	mysql_close(connector);
+
+	return 1;
+}

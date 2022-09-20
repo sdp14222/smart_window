@@ -26,6 +26,7 @@ struct init_msg_info
 
 void * client_accept(void *arg);
 void * send_msg(void *arg);
+void * client_init_proc(void *arg);
 void error_handling(char *msg);
 
 #endif

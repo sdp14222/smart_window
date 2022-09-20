@@ -23,6 +23,9 @@ static int dd_dat_proc(void *arg);
 static int rw_dat_proc(void *arg);
 static int dr_dat_proc(void *arg);
 static int fm_dat_proc(void *arg);
+#if 0
+static int init_signal_send();
+#endif
 
 static int ht_dat_proc(void *arg)
 {
@@ -349,10 +352,17 @@ void * send_msg(void *arg)
 	serv_addr.sin_addr.s_addr       = inet_addr(SERVER_IP);
 	serv_addr.sin_port              = htons(atoi(SERVER_PORT));
 
+#if 0
+	for(int i = 0; i < 10; i++)
+		init_signal_send();
+#endif
+
 	while(1)
 	{
 		size = 0;
 		sock = socket(PF_INET, SOCK_STREAM, 0);
+
+		printf("sock : %d\n", sock);
 
 		if(connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
 			error_handling("connect() error");
@@ -394,9 +404,247 @@ void * send_msg(void *arg)
 	return NULL;
 }
 
+#if 0
+static int init_signal_send()
+{
+	static int serv_sock;
+	struct sockaddr_in serv_adr;
+	const int INIT_SIZE = 7;
+	char send_msg[INIT_SIZE];
+	char *msgp = send_msg;
+
+	uint8_t send_op = 0b0000;
+	uint16_t send_size = INIT_SIZE;
+	uint32_t uid = 1;
+
+	serv_sock = socket(PF_INET, SOCK_STREAM, 0);
+
+	memset(&serv_adr, 0, sizeof(serv_adr));
+	serv_adr.sin_family = AF_INET;
+	serv_adr.sin_addr.s_addr = inet_addr(SERVER_IP);
+	serv_adr.sin_port = htons(atoi("60004"));
+
+	printf("serv_sock : %d\n", serv_sock);
+
+	*msgp++ = send_op;
+
+	*(uint16_t*)msgp = htons(send_size);
+	msgp += sizeof(send_size);
+
+	*(uint32_t*)msgp = htonl(uid);
+
+	for(int i = 0; i < INIT_SIZE; i++)
+	{
+		printf("%x\n", send_msg[i]);
+	}
+
+	if(connect(serv_sock, (struct sockaddr*)&serv_adr, sizeof(serv_adr)) == -1 )
+	{
+		error_handling("connect() error~~~");
+	}
+
+	write(serv_sock, send_msg, INIT_SIZE);
+
+	puts("write~~~~~");
+
+	char message[100] = "hawawa...";
+	int read_cnt, cnt; 
+
+	sleep(1);
+	close(serv_sock);
+
+#if 0
+	while(1)
+#endif
+	{
+		puts("hmmmm");
+		printf("serv_sock : %d\n", serv_sock);
+		read_cnt = read(serv_sock, message, 3);
+		printf("read_cnt : %d\n", read_cnt);
+		if(read_cnt == -1)
+		{
+			puts("read_cnt == -1");
+		}
+		else if(read_cnt == 0)
+		{
+			printf("a");
+		}
+	}
+	printf("message : %s\n", message);
+	
+#if 0
+	close(serv_sock);
+#endif
+
+	return 1;
+}
+#endif
+
 void * recv_msg(void *arg)
 {
+	int serv_sock;
+	struct sockaddr_in serv_adr;
+	const int INIT_SIZE = 7;
+	char send_msg[INIT_SIZE];
+	char msg[100];
+	char *msgp = send_msg;
+
+	uint8_t send_op = 0b0000;
+	uint16_t send_size = INIT_SIZE;
+	uint32_t uid = 1;
+
+	int read_cnt, cnt; 
+
+	serv_sock = socket(PF_INET, SOCK_STREAM, 0);
+
+	memset(&serv_adr, 0, sizeof(serv_adr));
+	serv_adr.sin_family = AF_INET;
+	serv_adr.sin_addr.s_addr = inet_addr(SERVER_IP);
+	serv_adr.sin_port = htons(atoi(SERVER_PORT2));
+
+	printf("serv_sock : %d\n", serv_sock);
+
+	*msgp++ = send_op;
+
+	*(uint16_t*)msgp = htons(send_size);
+	msgp += sizeof(send_size);
+
+	*(uint32_t*)msgp = htonl(uid);
+
+	for(int i = 0; i < INIT_SIZE; i++)
+	{
+		printf("%x\n", send_msg[i]);
+	}
+
+	if(connect(serv_sock, (struct sockaddr*)&serv_adr, sizeof(serv_adr)) == -1 )
+	{
+		error_handling("connect() error~~~");
+	}
+
+	write(serv_sock, send_msg, INIT_SIZE);
+
+	while(1)
+	{
+		read_cnt = read(serv_sock, msg, sizeof(msg));
+		cnt += read_cnt;
+
+		if(read_cnt == -1)
+		{
+			puts("read_cnt == -1");
+		}
+		else if(read_cnt == 0)
+		{
+			printf("a");
+		}
+	}
+	
+	close(serv_sock);
+
 	return NULL;
+
+#if 0
+	int my_sock, serv_sock;
+	struct sockaddr_in my_adr, serv_adr;
+	unsigned int serv_adr_sz;
+	const int INIT_SIZE = 7;
+	const int PORT_NUM = 58972;
+	char init_read_msg[INIT_SIZE];
+	int read_cnt, cnt;
+	int my_sock2;
+
+	init_signal_send();
+		
+	while(1);
+
+	my_sock = socket(PF_INET, SOCK_STREAM, 0);
+	
+	memset(&my_adr, 0, sizeof(my_adr));
+	my_adr.sin_family = AF_INET;
+	my_adr.sin_addr.s_addr = htonl(INADDR_ANY);
+	my_adr.sin_port = htons(PORT_NUM);
+	printf("my_sock : %d\n", my_sock);
+
+
+	my_sock2 = socket(PF_INET, SOCK_STREAM, 0);
+	my_adr.sin_family = AF_INET;
+	my_adr.sin_addr.s_addr = htonl(INADDR_ANY);
+	my_adr.sin_port = htons(20000);
+	printf("my_sock2 : %d\n", my_sock2);
+
+	if(bind(my_sock, (struct sockaddr*)&my_adr, sizeof(my_adr)) == -1)
+	{
+		error_handling("bind() error");
+	}
+
+	if(listen(my_sock, 5) == -1)
+	{
+		error_handling("listen() error");
+	}
+
+	while(1)
+	{
+		cnt = 0;
+
+		serv_sock = accept(my_sock, (struct sockaddr*)&serv_adr, &serv_adr_sz);
+
+		printf("Connected client IP   : %s \n", inet_ntoa(serv_adr.sin_addr));
+		printf("Connected client Port : %d \n", ntohs(serv_adr.sin_port)); 
+
+		while(cnt < INIT_SIZE)
+		{
+			read_cnt = read(serv_sock, init_read_msg, INIT_SIZE);
+			if(read_cnt == -1)
+			{
+
+				break;
+			}
+			else if(read_cnt == 0)
+			{
+				puts("read_cnt 0");
+				break;
+			}
+			
+			cnt += read_cnt;
+		}
+
+		if(!cnt)
+		{
+			puts("cnt == 0");
+			continue;
+		}
+
+		// 0000 10xx
+		// 0000 1100
+		switch(((*init_read_msg) >> 2) ^ 0x3)
+		{
+		case 1:
+			// 0000 10xx
+			// 0000 1011
+			switch(*init_read_msg & 0x3)
+			{
+			case 1:
+				// control of raspberry pi
+				//read();
+				break;
+			case 2:
+				// response of connection request
+				break;
+			case 3:
+				// response of first connection signal
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+			
+	}
+
+
+	return NULL;
+#endif
 }
 
 static void get_send_data_size(uint16_t *size)
