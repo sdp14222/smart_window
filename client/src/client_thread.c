@@ -132,7 +132,7 @@ static int data_store(did_t did, void *arg)
 
 void * fm_thread(void *arg)
 {
-	static int fan_speed;
+	int fan_speed;
 	int cnt = 0;
 	int tmp_speed;
 
@@ -163,7 +163,7 @@ void * fm_thread(void *arg)
 
 void * dr_thread(void *arg)
 {
-	static int isOpened;
+	int isOpened;
 	int cnt = 0;
 	int tmp_isOpened;
 
@@ -180,11 +180,13 @@ void * dr_thread(void *arg)
 			isOpened = tmp_isOpened;
 			data_store(DID_DR, (void *)&isOpened);
 		}
+#if 0
 		else if(cnt == 5)
 		{
 			isOpened = dr(DR_OPEN);
 			data_store(DID_DR, (void *)&isOpened);
 		}
+#endif
 
 		cnt++;
 		delay(1000);
@@ -359,6 +361,11 @@ void * send_msg(void *arg)
 
 	while(1)
 	{
+		for(cnt = 0; cnt < 10; cnt++)
+		{
+			delay(1000);
+		}
+
 		size = 0;
 		sock = socket(PF_INET, SOCK_STREAM, 0);
 
@@ -366,11 +373,6 @@ void * send_msg(void *arg)
 
 		if(connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
 			error_handling("connect() error");
-
-		for(cnt = 0; cnt < 10; cnt++)
-		{
-			delay(1000);
-		}
 
 		get_send_data_size(&size);
 		printf("total size : %d\n", size);
@@ -447,7 +449,7 @@ static int init_signal_send()
 
 	puts("write~~~~~");
 
-	char message[100] = "hawawa...";
+	char message[100];
 	int read_cnt, cnt; 
 
 	sleep(1);
@@ -525,126 +527,70 @@ void * recv_msg(void *arg)
 
 	while(1)
 	{
-		read_cnt = read(serv_sock, msg, sizeof(msg));
-		cnt += read_cnt;
-
-		if(read_cnt == -1)
-		{
-			puts("read_cnt == -1");
-		}
-		else if(read_cnt == 0)
-		{
-			printf("a");
-		}
-	}
-	
-	close(serv_sock);
-
-	return NULL;
-
-#if 0
-	int my_sock, serv_sock;
-	struct sockaddr_in my_adr, serv_adr;
-	unsigned int serv_adr_sz;
-	const int INIT_SIZE = 7;
-	const int PORT_NUM = 58972;
-	char init_read_msg[INIT_SIZE];
-	int read_cnt, cnt;
-	int my_sock2;
-
-	init_signal_send();
-		
-	while(1);
-
-	my_sock = socket(PF_INET, SOCK_STREAM, 0);
-	
-	memset(&my_adr, 0, sizeof(my_adr));
-	my_adr.sin_family = AF_INET;
-	my_adr.sin_addr.s_addr = htonl(INADDR_ANY);
-	my_adr.sin_port = htons(PORT_NUM);
-	printf("my_sock : %d\n", my_sock);
-
-
-	my_sock2 = socket(PF_INET, SOCK_STREAM, 0);
-	my_adr.sin_family = AF_INET;
-	my_adr.sin_addr.s_addr = htonl(INADDR_ANY);
-	my_adr.sin_port = htons(20000);
-	printf("my_sock2 : %d\n", my_sock2);
-
-	if(bind(my_sock, (struct sockaddr*)&my_adr, sizeof(my_adr)) == -1)
-	{
-		error_handling("bind() error");
-	}
-
-	if(listen(my_sock, 5) == -1)
-	{
-		error_handling("listen() error");
-	}
-
-	while(1)
-	{
 		cnt = 0;
+		uint8_t open;
+		uint16_t speed;
+		int size = INIT_SIZE;
+		int first_flag = 1;
 
-		serv_sock = accept(my_sock, (struct sockaddr*)&serv_adr, &serv_adr_sz);
-
-		printf("Connected client IP   : %s \n", inet_ntoa(serv_adr.sin_addr));
-		printf("Connected client Port : %d \n", ntohs(serv_adr.sin_port)); 
-
-		while(cnt < INIT_SIZE)
+		while(cnt < size)
 		{
-			read_cnt = read(serv_sock, init_read_msg, INIT_SIZE);
+			read_cnt = read(serv_sock, msg, 100);
+			cnt += read_cnt;
+
 			if(read_cnt == -1)
 			{
-
+				puts("read_cnt == -1");
 				break;
 			}
 			else if(read_cnt == 0)
 			{
-				puts("read_cnt 0");
-				break;
+				puts("read_cnt == 0");
 			}
-			
-			cnt += read_cnt;
-		}
 
-		if(!cnt)
-		{
-			puts("cnt == 0");
-			continue;
-		}
-
-		// 0000 10xx
-		// 0000 1100
-		switch(((*init_read_msg) >> 2) ^ 0x3)
-		{
-		case 1:
-			// 0000 10xx
-			// 0000 1011
-			switch(*init_read_msg & 0x3)
+			if(first_flag)
 			{
-			case 1:
-				// control of raspberry pi
-				//read();
-				break;
-			case 2:
-				// response of connection request
-				break;
-			case 3:
-				// response of first connection signal
-				break;
-			default:
-				break;
+				first_flag = 0;
+				size = ntohs(*(uint16_t*)(msg + 1));
+			}
+			printf("size : %d\n", size);
+			printf("read_cnt : %d\n", read_cnt);
+		}
+
+		for(int i = 0; i < size; i++)
+			printf("msg[%d] : %x\n", i, msg[i]);
+
+		switch(msg[7])
+		{
+		case 0b011:
+			// dr
+			open = msg[8];
+			printf("open : %x\n", open);
+			if(open == DR_CLOSE || open == DR_OPEN)
+			{
+				puts("dr exec");
+				printf("dr open return : %d\n", dr(open));
+			}
+			break;
+		case 0b100:
+			// fm
+			speed = ntohs(*(uint16_t*)(msg + 8));
+			printf("speed : %x\n", speed);
+			if(speed >= 0 || speed <= MAX_RANGE)
+			{
+				puts("fm exec");
+				printf("fm speed return : %d\n", fm(speed));
 			}
 			break;
 		default:
 			break;
 		}
-			
 	}
-
+	puts("close ..");
+	
+	close(serv_sock);
 
 	return NULL;
-#endif
 }
 
 static void get_send_data_size(uint16_t *size)

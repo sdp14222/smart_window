@@ -25,6 +25,8 @@ int dr(int open)
 			return isOpened;
 		case DR_CLOSE :
 			isOpened = DR_CLOSE;
+			pwmWrite(DR_PIN, isOpened);
+			return isOpened;
 		case DR_OPEN  :
 			isOpened = DR_OPEN;
 			pwmWrite(DR_PIN, isOpened);
