@@ -2,6 +2,9 @@
 #define __COMMON_H__
 
 #define SERVER_IP	"172.30.1.46"
+#if 0
+#define SERVER_IP	"192.168.0.10"
+#endif
 #define SERVER_PORT	"39202"
 #define SERVER_PORT2	"48990"
 #define DATA_MAX_CNT	70

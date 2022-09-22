@@ -1,6 +1,6 @@
 /**************************************************
  * Created  : 2022.09.18
- * Modified : 2022.09.19
+ * Modified : 2022.09.21
  * Author   : SangDon Park
  **************************************************/
 #include "server.h"
@@ -24,6 +24,7 @@ static int rptos(struct init_msg_info *info)
 	{
 	case 0:
 		// 00 : first connect signal
+		// Not used... reason : using another server port
 		puts("first connect signal");
 		close(info->clnt_sock);
 		return 1;
@@ -426,7 +427,7 @@ void * client_init_proc(void *arg)
 
 		char *msgp = msg;
 
-		uint8_t cmd = *msgp++;
+		msgp++;
 
 		uint16_t size = ntohs(*(uint16_t*)msgp);
 		msgp += sizeof(size);
